@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: psychemetredb
+      POSTGRES_USER: psychemetre
+      POSTGRES_PASSWORD: letmein@123
+    ports: ["5432:5432"]
+    volumes: [psychemetre_pgdata:/var/lib/postgresql/data]
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg://psychemetre:letmein@123@db:5432/psychemetredb
+    ports: ["8000:8000"]
+    depends_on: [db]
+volumes:
+  psychemetre_pgdata:
