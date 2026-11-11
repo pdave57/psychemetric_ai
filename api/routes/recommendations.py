@@ -1,0 +1,4 @@
+from fastapi import APIRouter
+router=APIRouter()
+@router.get("/")
+def list_recommendations(): return {"items":[],"status":"recommendation engine planned for a later milestone"}
