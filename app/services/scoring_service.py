@@ -1,4 +1,4 @@
-"""Scoring engine for the InnerMap temperament questionnaire.
+"""Scoring engine for the PsychemetreAI temperament questionnaire.
 
 Weights, reverse-scoring, and normalisation are PROVISIONAL pending
 expert review and psychometric validation.  The scoring version string

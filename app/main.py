@@ -5,7 +5,10 @@ Startup hook:
   - Seeds the prototype instrument and recommendation templates idempotently.
 """
 
+from pathlib import Path
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from app.core.database import Base, engine, SessionLocal
 from app.core.logging import configure_logging
@@ -22,16 +25,19 @@ from app.api.routes import (
     safety,
     history,
     agent_execution,
+    knowledge,
+    privacy,
 )
 
 configure_logging()
 
 app = FastAPI(
-    title="InnerMAP AI Assessment API",
-    version="0.3.0",
+    title="Agent Bleu — Personal Assessment API",
+    version="0.5.0",
     description=(
         "Reflective temperament assessment, emotional self-reports, "
-        "personalized recommendations, safety monitoring, and LangGraph orchestration."
+        "personalized recommendations, safety monitoring, LangGraph orchestration, "
+        "RAG knowledge retrieval, and NDPR/GDPR privacy controls. Backend for Agent Bleu."
     ),
 )
 
@@ -58,8 +64,19 @@ for route, prefix, tag in [
     (safety.router,          "/api/v1/safety",          "Safety Monitoring"),
     (history.router,         "/api/v1/history",         "Assessment History"),
     (agent_execution.router, "/api/v1/agents",          "Agent Orchestration"),
+    (knowledge.router,       "/api/v1/knowledge",       "Knowledge Base / RAG"),
+    (privacy.router,         "/api/v1/privacy",         "Data Privacy & NDPR"),
 ]:
     app.include_router(route, prefix=prefix, tags=[tag])
+
+# Serve static dashboard if directory exists
+static_path = Path(__file__).resolve().parent / "static"
+if static_path.exists():
+    app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+    @app.get("/")
+    def serve_dashboard():
+        return FileResponse(static_path / "index.html")
 
 
 @app.get("/health")

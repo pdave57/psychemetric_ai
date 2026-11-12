@@ -22,6 +22,10 @@ def include_object(object, name, type_, reflected, compare_to):
         # SQLite reflects VECTOR(1536) as NUMERIC(1536). Ignore this false-positive drift on SQLite.
         if DATABASE_URL.startswith("sqlite"):
             return False
+    if type_ == "column" and name == "id" and getattr(object, "table", None) is not None and object.table.name == "audit_log":
+        # SQLite autoincrement primary key type comparison between Integer and BigInteger
+        if DATABASE_URL.startswith("sqlite"):
+            return False
     return True
 
 

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Bleu — Personal Assessment Dashboard</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --sanguine: #f59e0b;
+      --choleric: #ef4444;
+      --melancholic: #3b82f6;
+      --phlegmatic: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 2rem; }
+    .container { max-width: 900px; margin: 0 auto; }
+    header { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+    h1 { font-size: 1.8rem; font-weight: 700; color: #fff; }
+    .subtitle { color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem; }
+    .disclaimer { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #fca5a5; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1.5rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; }
+    .bar-group { margin-bottom: 1rem; }
+    .bar-label { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.3rem; }
+    .bar-track { background: #334155; height: 12px; border-radius: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
+    .chat-box { height: 260px; overflow-y: auto; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; padding: 1rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .msg { padding: 0.6rem 0.9rem; border-radius: 6px; font-size: 0.9rem; max-width: 80%; }
+    .msg.bot { background: #312e81; align-self: flex-start; color: #e0e7ff; }
+    .msg.user { background: var(--primary); align-self: flex-end; color: #fff; }
+    .controls { display: flex; gap: 0.5rem; }
+    input[type="text"] { flex: 1; background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 0.6rem 1rem; border-radius: 6px; outline: none; }
+    button { background: var(--primary); color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 500; }
+    button:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Agent Bleu</h1>
+      <p class="subtitle">Reflective Psychometric Assessment & Emotional Self-Reporting (Powered by PsychemetreAI)</p>
+    </header>
+
+    <div class="disclaimer">
+      <strong>Important Safeguard:</strong> This assessment is an exploratory, reflective framework based on classical temperaments. It does not provide medical, psychological, or diagnostic evaluations.
+    </div>
+
+    <!-- Live Interaction Box -->
+    <div class="card">
+      <div class="card-title">Interactive Assessment Session</div>
+      <div class="chat-box" id="chat">
+        <div class="msg bot">Welcome to Agent Bleu. When you are ready, describe how you typically approach group projects or social gatherings.</div>
+      </div>
+      <div class="controls">
+        <input type="text" id="userInput" placeholder="Type your response here...">
+        <button onclick="sendResponse()">Submit</button>
+      </div>
+    </div>
+
+    <!-- Quantitative Temperament Scores -->
+    <div class="card">
+      <div class="card-title">Reflective Temperament Dimensions</div>
+      <div class="bar-group">
+        <div class="bar-label"><span>Sanguine (Enthusiastic / Social)</span><span id="score-san">75 / 100</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width: 75%; background: var(--sanguine);"></div></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar-label"><span>Choleric (Assertive / Goal-Driven)</span><span id="score-cho">60 / 100</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width: 60%; background: var(--choleric);"></div></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar-label"><span>Melancholic (Analytical / Detail-Oriented)</span><span id="score-mel">82 / 100</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width: 82%; background: var(--melancholic);"></div></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar-label"><span>Phlegmatic (Calm / Cooperative)</span><span id="score-phl">45 / 100</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width: 45%; background: var(--phlegmatic);"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sessionId = "demo-" + Math.random().toString(36).substring(7);
+
+    async function sendResponse() {
+      const input = document.getElementById("userInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chat = document.getElementById("chat");
+      const userDiv = document.createElement("div");
+      userDiv.className = "msg user";
+      userDiv.innerText = text;
+      chat.appendChild(userDiv);
+      input.value = "";
+      chat.scrollTop = chat.scrollHeight;
+
+      try {
+        const resp = await fetch("/api/v1/agents/step", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: sessionId, free_text: text })
+        });
+        const data = await resp.json();
+
+        const botDiv = document.createElement("div");
+        botDiv.className = "msg bot";
+        if (data.safety_flagged) {
+          botDiv.style.background = "#7f1d1d";
+          botDiv.innerText = "Safety Alert: " + (data.safety_event?.message || "Crisis resources provided.");
+        } else if (data.narrative_report) {
+          botDiv.innerText = data.narrative_report.narrative || "Assessment synthesis complete.";
+        } else {
+          botDiv.innerText = "Response recorded. Continuing assessment exploration.";
+        }
+        chat.appendChild(botDiv);
+        chat.scrollTop = chat.scrollHeight;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  </script>
+</body>
+</html>

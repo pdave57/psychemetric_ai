@@ -15,6 +15,7 @@ from sqlalchemy import (
     DateTime,
     Enum as SAEnum,
     ForeignKey,
+    Integer,
     JSON,
     LargeBinary,
     Text,
@@ -105,8 +106,8 @@ class AuditLog(Base):
 
     __tablename__ = "audit_log"
 
-    # BIGSERIAL for high-volume append performance (not UUID).
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    # Integer primary key with autoincrement for SQLite and PostgreSQL BIGSERIAL.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     # The user who performed the action (nullable for system events).
     actor_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
     # Action identifier, e.g. "report.view", "data.export".

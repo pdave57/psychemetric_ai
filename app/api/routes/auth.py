@@ -66,7 +66,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     if not payload.is_adult_confirmed:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="InnerMAP is restricted to adults aged 18 and older. Confirmation required.",
+            detail="PsychemetreAI is restricted to adults aged 18 and older. Confirmation required.",
         )
 
     existing = db.scalar(select(User).where(User.email == payload.email.lower()))

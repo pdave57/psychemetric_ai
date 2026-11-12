@@ -65,7 +65,7 @@ def screen_text_for_safety(text: Optional[str]) -> Optional[Dict[str, Any]]:
             "patterns": matched_critical,
             "resources": VERIFIED_RESOURCES,
             "message": (
-                "We noticed you may be in distress. InnerMAP cannot provide emergency care. "
+                "We noticed you may be in distress. PsychemetreAI cannot provide emergency care. "
                 "Please reach out immediately to one of these free, confidential support services."
             )
         }
