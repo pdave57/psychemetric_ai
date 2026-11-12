@@ -1,25 +1,67 @@
+"""FastAPI application entry point.
+
+Startup hook:
+  - Creates all SQLAlchemy tables (dev / test only; production uses Alembic).
+  - Seeds the prototype instrument and recommendation templates idempotently.
+"""
+
 from fastapi import FastAPI
+
 from app.core.database import Base, engine, SessionLocal
-from app.repositories.assessment_repository import seed_initial_instrument
-from app.api.routes import auth, assessments, questions, emotions, reports, recommendations
 from app.core.logging import configure_logging
+from app.repositories.assessment_repository import seed_initial_instrument
+from app.services.recommendation_service import seed_recommendation_templates
+from app.api.routes import (
+    auth,
+    consent,
+    assessments,
+    questions,
+    emotions,
+    reports,
+    recommendations,
+    safety,
+    history,
+    agent_execution,
+)
 
 configure_logging()
-app = FastAPI(title="InnerMap AI Assessment API", version="0.1.0",
- description="Reflective temperament assessment and emotional self-report prototype; not diagnostic.")
+
+app = FastAPI(
+    title="InnerMAP AI Assessment API",
+    version="0.3.0",
+    description=(
+        "Reflective temperament assessment, emotional self-reports, "
+        "personalized recommendations, safety monitoring, and LangGraph orchestration."
+    ),
+)
+
+
 @app.on_event("startup")
 def startup():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
-    try: seed_initial_instrument(db)
-    finally: db.close()
+    try:
+        seed_initial_instrument(db)
+        seed_recommendation_templates(db)
+    finally:
+        db.close()
+
+
 for route, prefix, tag in [
- (auth.router,"/api/v1/auth","Authentication"),
- (assessments.router,"/api/v1/assessments","Assessments"),
- (questions.router,"/api/v1/questions","Questions"),
- (emotions.router,"/api/v1/emotions","Emotional self-reports"),
- (reports.router,"/api/v1/reports","Reports"),
- (recommendations.router,"/api/v1/recommendations","Recommendations")]:
-    app.include_router(route,prefix=prefix,tags=[tag])
+    (auth.router,            "/api/v1/auth",            "Authentication"),
+    (consent.router,         "/api/v1/consent",         "Consent"),
+    (assessments.router,     "/api/v1/assessments",     "Assessments"),
+    (questions.router,       "/api/v1/questions",       "Questions"),
+    (emotions.router,        "/api/v1/emotions",        "Emotional self-reports"),
+    (reports.router,         "/api/v1/reports",         "Reports"),
+    (recommendations.router, "/api/v1/recommendations", "Recommendations"),
+    (safety.router,          "/api/v1/safety",          "Safety Monitoring"),
+    (history.router,         "/api/v1/history",         "Assessment History"),
+    (agent_execution.router, "/api/v1/agents",          "Agent Orchestration"),
+]:
+    app.include_router(route, prefix=prefix, tags=[tag])
+
+
 @app.get("/health")
-def health(): return {"status":"ok"}
+def health():
+    return {"status": "ok"}

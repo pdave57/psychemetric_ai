@@ -15,7 +15,7 @@ def test_sqlite_engine_configuration():
 
 def test_postgresql_engine_configuration_uses_psycopg():
     with patch("app.core.database.create_engine") as create:
-        build_engine("postgresql+psycopg://user:pass@localhost:5432/innermap")
+        build_engine("postgresql+psycopg://user:pass@localhost:5432/psychemtredb")
     args, kwargs = create.call_args
     assert make_url(args[0]).drivername == "postgresql+psycopg"
     assert kwargs["connect_args"] == {}

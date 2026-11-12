@@ -1,12 +1,24 @@
+"""Pydantic schemas for question API response payloads."""
+
+import uuid
 from pydantic import BaseModel
+
+
 class AnswerOptionOut(BaseModel):
-    value:int
-    label:str
+    """A selectable answer option for display."""
+
+    code:  str
+    text:  str
+
+
 class QuestionOut(BaseModel):
-    id:int
-    code:str
-    prompt:str
-    dimension:str
-    reverse_scored:bool
-    display_order:int
-    options:list[AnswerOptionOut]
+    """A question item for display during an assessment."""
+
+    id:            uuid.UUID
+    code:          str
+    text:          str
+    area:          str
+    kind:          str
+    reverse_coded: bool
+    sort_order:    int
+    options:       list[AnswerOptionOut]
