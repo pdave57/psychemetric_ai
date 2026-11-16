@@ -1,0 +1,375 @@
+{
+  "instrument_code": "psychemetre_temperament_40",
+  "version": "1.0.0",
+  "title": "PsychemetreAI 40-Item Classical Temperament Inventory",
+  "framework": "Four Classical Reflective Temperaments",
+  "scale": "likert_5_agreement",
+  "dimensions": ["sanguine", "choleric", "melancholic", "phlegmatic"],
+  "total_items": 40,
+  "items_per_dimension": 10,
+  "questions": [
+    {
+      "code": "SAN01",
+      "dimension": "sanguine",
+      "text": "I feel energised when interacting with groups of people.",
+      "area": "social_engagement",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 1
+    },
+    {
+      "code": "SAN02",
+      "dimension": "sanguine",
+      "text": "I readily express excitement and optimism when an interesting idea emerges.",
+      "area": "affective_expression",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 2
+    },
+    {
+      "code": "SAN03",
+      "dimension": "sanguine",
+      "text": "I enjoy spontaneous activities more than following rigid schedules.",
+      "area": "behavioral_spontaneity",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 3
+    },
+    {
+      "code": "SAN04",
+      "dimension": "sanguine",
+      "text": "I tend to prefer staying quiet and solitary during social events.",
+      "area": "social_engagement",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 4
+    },
+    {
+      "code": "SAN05",
+      "dimension": "sanguine",
+      "text": "I find it easy to strike up conversations with unfamiliar people.",
+      "area": "social_engagement",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 5
+    },
+    {
+      "code": "SAN06",
+      "dimension": "sanguine",
+      "text": "I bounce back quickly when minor daily setbacks disrupt my mood.",
+      "area": "affective_resilience",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 6
+    },
+    {
+      "code": "SAN07",
+      "dimension": "sanguine",
+      "text": "I often seek out novelty, variety, and lively environments.",
+      "area": "novelty_seeking",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 7
+    },
+    {
+      "code": "SAN08",
+      "dimension": "sanguine",
+      "text": "Repetitive, routine tasks make me feel restless or easily bored.",
+      "area": "boredom_susceptibility",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 8
+    },
+    {
+      "code": "SAN09",
+      "dimension": "sanguine",
+      "text": "I rarely show outward enthusiasm, even when good news arrives.",
+      "area": "affective_expression",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 9
+    },
+    {
+      "code": "SAN10",
+      "dimension": "sanguine",
+      "text": "Others often describe my presence as warm, vibrant, and expressive.",
+      "area": "social_perception",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 10
+    },
+
+    {
+      "code": "CHO01",
+      "dimension": "choleric",
+      "text": "I am comfortable taking the lead and providing direction when a decision is required.",
+      "area": "leadership_initiative",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 11
+    },
+    {
+      "code": "CHO02",
+      "dimension": "choleric",
+      "text": "I make decisions promptly once essential facts are available.",
+      "area": "decisiveness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 12
+    },
+    {
+      "code": "CHO03",
+      "dimension": "choleric",
+      "text": "I set ambitious goals and pursue them with persistent determination.",
+      "area": "goal_orientation",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 13
+    },
+    {
+      "code": "CHO04",
+      "dimension": "choleric",
+      "text": "I tend to avoid taking responsibility when group efforts lack leadership.",
+      "area": "leadership_initiative",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 14
+    },
+    {
+      "code": "CHO05",
+      "dimension": "choleric",
+      "text": "I thrive when confronting challenging obstacles or competitive situations.",
+      "area": "drive_competitiveness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 15
+    },
+    {
+      "code": "CHO06",
+      "dimension": "choleric",
+      "text": "I focus primarily on tangible outcomes and efficiency rather than procedural steps.",
+      "area": "outcome_focus",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 16
+    },
+    {
+      "code": "CHO07",
+      "dimension": "choleric",
+      "text": "I become impatient when progress is slow or indecisive.",
+      "area": "assertiveness_pace",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 17
+    },
+    {
+      "code": "CHO08",
+      "dimension": "choleric",
+      "text": "I openly voice my perspective even when it challenges group consensus.",
+      "area": "assertiveness_pace",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 18
+    },
+    {
+      "code": "CHO09",
+      "dimension": "choleric",
+      "text": "I prefer letting other people determine strategic directions and priorities.",
+      "area": "leadership_initiative",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 19
+    },
+    {
+      "code": "CHO10",
+      "dimension": "choleric",
+      "text": "When crises happen, I instinctively organize resources and drive action.",
+      "area": "crisis_action",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 20
+    },
+
+    {
+      "code": "MEL01",
+      "dimension": "melancholic",
+      "text": "I examine details carefully before concluding any complex task.",
+      "area": "analytical_thoroughness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 21
+    },
+    {
+      "code": "MEL02",
+      "dimension": "melancholic",
+      "text": "I spend time reflecting on experiences to understand underlying causes and lessons.",
+      "area": "reflective_depth",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 22
+    },
+    {
+      "code": "MEL03",
+      "dimension": "melancholic",
+      "text": "I quickly spot small inaccuracies or logical inconsistencies that others overlook.",
+      "area": "analytical_thoroughness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 23
+    },
+    {
+      "code": "MEL04",
+      "dimension": "melancholic",
+      "text": "I rarely spend time considering potential risks or downstream consequences.",
+      "area": "risk_anticipation",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 24
+    },
+    {
+      "code": "MEL05",
+      "dimension": "melancholic",
+      "text": "High standards of quality and accuracy are deeply important to me.",
+      "area": "conscientious_standards",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 25
+    },
+    {
+      "code": "MEL06",
+      "dimension": "melancholic",
+      "text": "I enjoy quiet, focused periods of solitary deep work or intellectual inquiry.",
+      "area": "solitary_focus",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 26
+    },
+    {
+      "code": "MEL07",
+      "dimension": "melancholic",
+      "text": "I experience feelings deeply and often need time to process emotional events.",
+      "area": "emotional_depth",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 27
+    },
+    {
+      "code": "MEL08",
+      "dimension": "melancholic",
+      "text": "I create thorough plans before committing resources to an unfamiliar endeavor.",
+      "area": "systematic_planning",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 28
+    },
+    {
+      "code": "MEL09",
+      "dimension": "melancholic",
+      "text": "I am comfortable submitting work that is only 'good enough' without double checking.",
+      "area": "conscientious_standards",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 29
+    },
+    {
+      "code": "MEL10",
+      "dimension": "melancholic",
+      "text": "I appreciate order, elegance, and well-structured systems in life and work.",
+      "area": "systematic_planning",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 30
+    },
+
+    {
+      "code": "PHL01",
+      "dimension": "phlegmatic",
+      "text": "I remain calm and steady when surrounding circumstances become chaotic.",
+      "area": "emotional_stability",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 31
+    },
+    {
+      "code": "PHL02",
+      "dimension": "phlegmatic",
+      "text": "I prefer to de-escalate tension and resolve interpersonal disagreements amicably.",
+      "area": "peacekeeping",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 32
+    },
+    {
+      "code": "PHL03",
+      "dimension": "phlegmatic",
+      "text": "People in my life rely on me for consistent, dependable, and unflappable support.",
+      "area": "reliability_steadiness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 33
+    },
+    {
+      "code": "PHL04",
+      "dimension": "phlegmatic",
+      "text": "I become agitated and lose composure easily when unexpected plan shifts occur.",
+      "area": "adaptability_composure",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 34
+    },
+    {
+      "code": "PHL05",
+      "dimension": "phlegmatic",
+      "text": "I listen patiently to different viewpoints before forming a firm personal opinion.",
+      "area": "patient_listening",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 35
+    },
+    {
+      "code": "PHL06",
+      "dimension": "phlegmatic",
+      "text": "I naturally avoid aggressive confrontations, valuing harmony in relationships.",
+      "area": "peacekeeping",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 36
+    },
+    {
+      "code": "PHL07",
+      "dimension": "phlegmatic",
+      "text": "I can maintain an even, measured work pace without feeling rushed or frantic.",
+      "area": "measured_pace",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 37
+    },
+    {
+      "code": "PHL08",
+      "dimension": "phlegmatic",
+      "text": "I am generally content with predictable, peaceful daily routines.",
+      "area": "contentment_routine",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 38
+    },
+    {
+      "code": "PHL09",
+      "dimension": "phlegmatic",
+      "text": "I often initiate high-stakes conflicts just to test people or stir up excitement.",
+      "area": "peacekeeping",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 39
+    },
+    {
+      "code": "PHL10",
+      "dimension": "phlegmatic",
+      "text": "My friends and colleagues often value my comforting, non-judgmental presence.",
+      "area": "reliability_steadiness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 40
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "scales": {
+    "likert_5_agreement": {
+      "name": "5-Point Likert Agreement",
+      "type": "likert_5",
+      "min_value": 1,
+      "max_value": 5,
+      "options": [
+        {"value": 1, "code": "strongly_disagree", "label": "Strongly disagree"},
+        {"value": 2, "code": "disagree", "label": "Disagree"},
+        {"value": 3, "code": "neutral", "label": "Neither agree nor disagree"},
+        {"value": 4, "code": "agree", "label": "Agree"},
+        {"value": 5, "code": "strongly_agree", "label": "Strongly agree"}
+      ]
+    },
+    "likert_5_frequency": {
+      "name": "5-Point Frequency",
+      "type": "frequency_5",
+      "min_value": 1,
+      "max_value": 5,
+      "options": [
+        {"value": 1, "code": "never", "label": "Never"},
+        {"value": 2, "code": "rarely", "label": "Rarely"},
+        {"value": 3, "code": "sometimes", "label": "Sometimes"},
+        {"value": 4, "code": "often", "label": "Often"},
+        {"value": 5, "code": "always", "label": "Always"}
+      ]
+    },
+    "emotion_frequency": {
+      "name": "Emotion Self-Report Frequency",
+      "type": "categorical_frequency",
+      "options": [
+        {"code": "rarely", "label": "Rarely (less than once a week)", "weight": 1},
+        {"code": "sometimes", "label": "Sometimes (1-2 times a week)", "weight": 2},
+        {"code": "often", "label": "Often (3-5 times a week)", "weight": 3},
+        {"code": "very_often", "label": "Very often (daily or multiple times a day)", "weight": 4}
+      ]
+    },
+    "emotion_intensity": {
+      "name": "Emotion Subjective Intensity Scale",
+      "type": "numeric_scale",
+      "min_value": 0,
+      "max_value": 10,
+      "anchor_low": "0 - Barely noticeable / minimal activation",
+      "anchor_mid": "5 - Moderate emotional presence",
+      "anchor_high": "10 - Overwhelming / peak physiological activation"
+    },
+    "emotion_duration": {
+      "name": "Emotion Episode Duration",
+      "type": "categorical_duration",
+      "options": [
+        {"code": "minutes", "label": "A few minutes (fleeting)", "weight": 1},
+        {"code": "hours", "label": "Several hours (half a day)", "weight": 2},
+        {"code": "days", "label": "Multiple days (persistent mood)", "weight": 3},
+        {"code": "weeks", "label": "Weeks or prolonged", "weight": 4},
+        {"code": "varies", "label": "Varies significantly depending on context", "weight": 2}
+      ]
+    },
+    "emotion_impact": {
+      "name": "Perceived Functioning Impact",
+      "type": "categorical_impact",
+      "options": [
+        {"code": "none", "label": "No negative disruption to daily life", "weight": 1},
+        {"code": "mild", "label": "Mild distraction or temporary friction", "weight": 2},
+        {"code": "moderate", "label": "Noticeable interference with tasks or relationships", "weight": 3},
+        {"code": "severe", "label": "Substantial impairment in daily functioning", "weight": 4}
+      ]
+    }
+  }
+}

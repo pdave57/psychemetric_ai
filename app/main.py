@@ -17,6 +17,7 @@ from app.services.recommendation_service import seed_recommendation_templates
 from app.api.routes import (
     auth,
     consent,
+    catalogue,
     assessments,
     questions,
     emotions,
@@ -56,6 +57,7 @@ def startup():
 for route, prefix, tag in [
     (auth.router,            "/api/v1/auth",            "Authentication"),
     (consent.router,         "/api/v1/consent",         "Consent"),
+    (catalogue.router,       "/api/v1/catalogue",       "Assessment Catalogue"),
     (assessments.router,     "/api/v1/assessments",     "Assessments"),
     (questions.router,       "/api/v1/questions",       "Questions"),
     (emotions.router,        "/api/v1/emotions",        "Emotional self-reports"),

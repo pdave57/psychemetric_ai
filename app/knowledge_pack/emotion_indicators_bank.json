@@ -1,0 +1,98 @@
+{
+  "module": "discrete_emotion_indicators",
+  "version": "1.0.0",
+  "title": "PsychemetreAI Emotional Indicator Bank",
+  "description": "Structured self-report inventory covering 9 primary emotional states with frequency, intensity, duration, impact, triggers, and adaptive coping mechanisms.",
+  "emotions": [
+    {
+      "code": "anger",
+      "label": "Anger / Frustration",
+      "valence": "negative",
+      "arousal": "high",
+      "description": "A feeling of intense displeasure, irritation, or hostility typically provoked by perceived injustice, obstacle, or boundary violation.",
+      "common_triggers": ["interpersonal_conflict", "unmet_expectations", "injustice_or_unfairness", "blocked_goals", "disrespect"],
+      "adaptive_responses": ["time_out_cooling_period", "assertive_communication", "physical_exercise_discharge", "cognitive_reappraisal"],
+      " maladaptive_responses": ["explosive_outbursts", "passive_aggression", "rumination", "retaliation"]
+    },
+    {
+      "code": "anxiety",
+      "label": "Anxiety / Apprehension",
+      "valence": "negative",
+      "arousal": "high",
+      "description": "A state of diffuse worry, tension, or physiological hyperarousal anticipating future uncertainty, performance, or potential threat.",
+      "common_triggers": ["upcoming_deadlines", "uncertainty_or_ambiguity", "social_evaluation", "financial_pressure", "health_concerns"],
+      "adaptive_responses": ["sensory_grounding_54321", "box_breathing", "worry_scheduling", "action_oriented_micro_steps"],
+      "maladaptive_responses": ["avoidance", "catastrophizing", "chronic_reassurance_seeking", "procrastination"]
+    },
+    {
+      "code": "fear",
+      "label": "Fear / Threat Response",
+      "valence": "negative",
+      "arousal": "high",
+      "description": "An immediate survival-oriented emotional response to an identifiable, acute present threat or perceived danger.",
+      "common_triggers": ["physical_danger", "loss_of_security", "uncontrollable_crisis", "sudden_shock"],
+      "adaptive_responses": ["safety_assessment", "activating_support_network", "controlled_breathing", "focused_problem_solving"],
+      "maladaptive_responses": ["paralysis_freeze", "panic_behaviors", "denial_of_threat"]
+    },
+    {
+      "code": "sadness",
+      "label": "Sadness / Dejection",
+      "valence": "negative",
+      "arousal": "low",
+      "description": "An emotional state associated with feelings of loss, disappointment, grief, or diminished vitality.",
+      "common_triggers": ["loss_of_relationship", "disappointment_or_failure", "loneliness", "life_transitions", "unfulfilled_longing"],
+      "adaptive_responses": ["self_compassion_pause", "gentle_movement", "seeking_empathic_listening", "journaling"],
+      "maladaptive_responses": ["complete_social_withdrawal", "rumination", "self_neglect", "emotional_numbing"]
+    },
+    {
+      "code": "stress",
+      "label": "Stress / Cognitive Overload",
+      "valence": "negative",
+      "arousal": "moderate_to_high",
+      "description": "A state of mental or emotional strain resulting from demanding or adverse circumstances exceeding perceived coping resources.",
+      "common_triggers": ["workload_compression", "multi_tasking", "interpersonal_friction", "lack_of_autonomy", "sleep_deprivation"],
+      "adaptive_responses": ["task_prioritization_eisenhower", "boundary_setting", "diaphragmatic_breathing", "rest_restoration"],
+      "maladaptive_responses": ["overworking", "substance_misuse", "cynicism", "neglecting_basic_needs"]
+    },
+    {
+      "code": "guilt",
+      "label": "Guilt / Self-Reproach",
+      "valence": "negative",
+      "arousal": "moderate",
+      "description": "An internal affective tension stemming from belief that one has violated a personal moral standard or caused harm to another.",
+      "common_triggers": ["broken_commitments", "causing_unintentional_hurt", "perceived_selfishness", "failure_to_help"],
+      "adaptive_responses": ["sincere_apology_amends", "distinguishing_healthy_vs_neurotic_guilt", "learning_commitment"],
+      "maladaptive_responses": ["self_flagellation", "excessive_people_pleasing", "defensive_denial"]
+    },
+    {
+      "code": "jealousy",
+      "label": "Jealousy / Social Comparison",
+      "valence": "negative",
+      "arousal": "moderate_to_high",
+      "description": "An uncomfortable complex emotion involving resentment or fear of displacement triggered by another person's perceived advantage, success, or attention.",
+      "common_triggers": ["peer_professional_success", "social_media_highlight_reels", "partner_attention_to_others", "status_insecurity"],
+      "adaptive_responses": ["values_clarification", "converting_envy_to_emulation", "gratitude_practice", "digital_detox"],
+      "maladaptive_responses": ["belittling_others", "covert_sabotage", "chronic_comparison", "obsessive_monitoring"]
+    },
+    {
+      "code": "loneliness",
+      "label": "Loneliness / Disconnection",
+      "valence": "negative",
+      "arousal": "low",
+      "description": "A painful subjective feeling of disconnection or inadequacy in emotional intimacy, belonging, or companionship.",
+      "common_triggers": ["relocation_new_environment", "relationship_rupture", "superficial_interactions", "remote_isolation"],
+      "adaptive_responses": ["initiating_low_pressure_contact", "community_volunteering", "shared_interest_groups", "creative_expression"],
+      "maladaptive_responses": ["isolation_spiral", "hypervigilance_for_rejection", "substitute_escapism"]
+    },
+    {
+      "code": "joy",
+      "label": "Joy / Gratitude / Vitality",
+      "valence": "positive",
+      "arousal": "moderate_to_high",
+      "description": "A pleasant affective state marked by feelings of contentment, deep fulfillment, celebration, or expansive connection.",
+      "common_triggers": ["achievement_milestone", "meaningful_connection", "creative_breakthrough", "nature_immersion", "acts_of_kindness"],
+      "adaptive_responses": ["savoring_the_moment", "expressing_gratitude", "sharing_good_news_capitalization"],
+      "maladaptive_responses": ["anxiety_about_joy_ending", "reckless_overconfidence"]
+    }
+  ]
+}

@@ -1,0 +1,213 @@
+{
+  "recommendation_catalog_version": "1.0.0",
+  "governance": {
+    "evidence_levels": ["unreviewed_seed", "expert_reviewed", "research_supported", "clinical_guideline"],
+    "review_status": "clinician_reviewed_v1",
+    "disclaimer": "Recommendations are psychoeducational tools for reflective growth, not medical or psychiatric treatment."
+  },
+  "rules": [
+    {
+      "id": "rec_anxiety_grounding_54321",
+      "target_type": "emotion",
+      "target_code": "anxiety",
+      "min_band": "moderate",
+      "title": "5-4-3-2-1 Sensory Grounding Reset",
+      "evidence": "research_supported",
+      "citations": ["Linehan (2014) DBT Skills Training", "Noba Psychology (2020)"],
+      "criteria": {
+        "emotion": "anxiety",
+        "min_intensity": 5,
+        "triggers_any": ["uncertainty_or_ambiguity", "upcoming_deadlines", "social_evaluation", "workload"]
+      },
+      "body": {
+        "why": "Grounding disrupts sympathetic nervous system overdrive by engaging external somatic senses, pulling focus away from racing catastrophic thoughts.",
+        "what": "A structured sensory enumeration exercise performed in 3 to 5 minutes.",
+        "how": [
+          "Scan your environment and name 5 distinct things you can see.",
+          "Touch and consciously acknowledge 4 physical textures (e.g. your desk, sleeve, watch).",
+          "Identify 3 distinct ambient sounds (e.g. clock ticking, distant traffic).",
+          "Notice 2 things you can smell or scents nearby.",
+          "Acknowledge 1 positive taste, sensation, or something you are currently grateful for."
+        ],
+        "measure": "Check subjective anxiety intensity (0-10) before and 10 minutes following the exercise.",
+        "professional_support_when": "If panic attacks occur regularly or anxiety impairs daily responsibilities for multiple consecutive weeks."
+      }
+    },
+    {
+      "id": "rec_stress_box_breathing",
+      "target_type": "emotion",
+      "target_code": "stress",
+      "min_band": "low",
+      "title": "Box Breathing (4-4-4-4 Autonomic Reset)",
+      "evidence": "research_supported",
+      "citations": ["Benson (2000) The Relaxation Response", "Cleveland Clinic Autonomic Regulation"],
+      "criteria": {
+        "emotion": "stress",
+        "min_intensity": 4,
+        "triggers_any": ["workload_compression", "multi_tasking", "interpersonal_friction"]
+      },
+      "body": {
+        "why": "Regulated equal-ratio breathing balances sympathetic and parasympathetic branches of the autonomic nervous system, decelerating heart rate.",
+        "what": "A portable physiological reset technique used in high-stress operational environments.",
+        "how": [
+          "Exhale completely through your mouth.",
+          "Inhale smoothly through your nose for 4 counts.",
+          "Gently hold your breath with full lungs for 4 counts.",
+          "Exhale steadily through your mouth for 4 counts.",
+          "Hold your breath empty for 4 counts.",
+          "Repeat the cycle 4 to 6 times."
+        ],
+        "measure": "Notice deceleration in breathing rate and relaxation in shoulder/jaw tension.",
+        "professional_support_when": "When chronic stress leads to persistent insomnia, gastrointestinal distress, or feelings of complete burnout."
+      }
+    },
+    {
+      "id": "rec_anger_cognitive_reappraisal",
+      "target_type": "emotion",
+      "target_code": "anger",
+      "min_band": "moderate",
+      "title": "Tactical Pause & Cognitive Reframing",
+      "evidence": "expert_reviewed",
+      "citations": ["Gross (2002) Emotion Regulation Handbook", "Beck (1999) Prisoners of Hate"],
+      "criteria": {
+        "emotion": "anger",
+        "min_intensity": 5,
+        "triggers_any": ["interpersonal_conflict", "injustice_or_unfairness", "disrespect", "unmet_expectations"]
+      },
+      "body": {
+        "why": "Immediate anger surges narrow cognitive appraisals into hostility; an intentional delay restores prefrontal executive evaluation.",
+        "what": "A 90-second physiological pause coupled with three reframing questions before communicating.",
+        "how": [
+          "Step away physically or declare a 90-second pause before replying to a provoking message.",
+          "Ask: 'What is another plausible, non-hostile interpretation of the other person's intention?'",
+          "Ask: 'Will my desired response advance my long-term relationship or goal?'",
+          "State your boundary or grievance using 'I' statements rather than accusatory 'You' statements."
+        ],
+        "measure": "Fewer instances of regrettable reactive speech or impulsive escalation.",
+        "professional_support_when": "If anger escalates into physical intimidation, property damage, or severe interpersonal rupture."
+      }
+    },
+    {
+      "id": "rec_sadness_behavioral_activation",
+      "target_type": "emotion",
+      "target_code": "sadness",
+      "min_band": "moderate",
+      "title": "Micro Behavioral Activation & Self-Compassion",
+      "evidence": "research_supported",
+      "citations": ["Martell et al. (2010) Behavioral Activation for Depression", "Neff (2011) Self-Compassion"],
+      "criteria": {
+        "emotion": "sadness",
+        "min_intensity": 5,
+        "triggers_any": ["disappointment_or_failure", "loss_of_relationship", "life_transitions"]
+      },
+      "body": {
+        "why": "Sadness drives social withdrawal and physical immobility, which inadvertently intensifies low mood. Small deliberate actions rebuild momentum.",
+        "what": "A low-demand, manageable activity scheduled without requiring initial motivation.",
+        "how": [
+          "Select one small 10-minute task (e.g. a walk in daylight, making tea, tidying one counter).",
+          "Acknowledge the sadness kindly: 'It makes sense that I feel down right now.'",
+          "Perform the small task gently, focusing attention on sensory steps rather than outcome.",
+          "Avoid demanding high energy or joyful feelings from yourself during the task."
+        ],
+        "measure": "Record whether completing the micro-step yielded a small sense of dignity or relief.",
+        "professional_support_when": "If feelings of persistent sadness or anhedonia persist continuously for more than two weeks."
+      }
+    },
+    {
+      "id": "rec_choleric_slowing_listening",
+      "target_type": "temperament",
+      "target_code": "choleric",
+      "min_band": "high",
+      "title": "Deliberate Inquiry & Collaborative Pacing",
+      "evidence": "expert_reviewed",
+      "citations": ["TEMPS-A Clinical Manual", "Leadership Development Journal (2021)"],
+      "criteria": {
+        "temperament": "choleric",
+        "min_normalized_score": 70.0
+      },
+      "body": {
+        "why": "Strong outcome drive and assertiveness can inadvertently intimidate collaborators and miss valuable bottom-up insights.",
+        "what": "A conversational checkpoint practice that prioritizes inquiry before instruction.",
+        "how": [
+          "In team discussions, deliberately allow three other people to speak before offering your directive.",
+          "Ask at least two open-ended questions: 'What risks am I missing?' or 'How would you approach this?'",
+          "Summarize another person's proposal before evaluating it."
+        ],
+        "measure": "Increased team engagement and fewer misunderstandings in group projects.",
+        "professional_support_when": "If aggressive impatience damages critical professional partnerships."
+      }
+    },
+    {
+      "id": "rec_melancholic_good_enough_rule",
+      "target_type": "temperament",
+      "target_code": "melancholic",
+      "min_band": "high",
+      "title": "The 85% Sufficiency Principle for Perfectionism",
+      "evidence": "expert_reviewed",
+      "citations": ["Allen (2020) Balance of Personality", "Stoeber (2018) Psychology of Perfectionism"],
+      "criteria": {
+        "temperament": "melancholic",
+        "min_normalized_score": 70.0
+      },
+      "body": {
+        "why": "Exacting quality standards provide excellence but can trap high-melancholic thinkers in analysis paralysis and chronic rumination.",
+        "what": "A pre-commitment rule establishing when a task has reached practical completeness.",
+        "how": [
+          "Define 'objective completeness' criteria before beginning a detailed analysis or project.",
+          "Set a hard time boundary for editing and review passes (maximum 2 review cycles).",
+          "Ship or submit work when it satisfies the predetermined standard, accepting imperfect aesthetics."
+        ],
+        "measure": "Reduction in project turnaround time and reduced end-of-day mental fatigue.",
+        "professional_support_when": "When perfectionistic standards cause debilitating procrastination or severe burnout."
+      }
+    },
+    {
+      "id": "rec_phlegmatic_assertive_voice",
+      "target_type": "temperament",
+      "target_code": "phlegmatic",
+      "min_band": "high",
+      "title": "Constructive Boundary & Preference Expression",
+      "evidence": "expert_reviewed",
+      "citations": ["Alberti & Emmons (2017) Your Perfect Right", "Noba Personality Studies"],
+      "criteria": {
+        "temperament": "phlegmatic",
+        "min_normalized_score": 70.0
+      },
+      "body": {
+        "why": "A preference for relational peace can lead to habitual compliance, masking valuable personal needs and creative ideas.",
+        "what": "A structured practice to state preferences clearly without requiring conflict.",
+        "how": [
+          "Identify one decision each week where you would normally default to 'whatever everyone wants'.",
+          "Express your genuine preference early in the discussion.",
+          "Practice comfortable ownership of boundaries: 'I am unable to take that on right now, but I can support on X.'"
+        ],
+        "measure": "Noticeable reduction in unspoken resentment and greater personal agency.",
+        "professional_support_when": "When conflict avoidance leads to tolerating unhealthy boundaries."
+      }
+    },
+    {
+      "id": "rec_sanguine_execution_commitments",
+      "target_type": "temperament",
+      "target_code": "sanguine",
+      "min_band": "high",
+      "title": "Visual Follow-Through Anchors & Milestone Tracking",
+      "evidence": "expert_reviewed",
+      "citations": ["Gollwitzer (1999) Implementation Intentions", "Four Temperaments Guidebook"],
+      "criteria": {
+        "temperament": "sanguine",
+        "min_normalized_score": 70.0
+      },
+      "body": {
+        "why": "High enthusiasm generates excellent initial momentum, but novelty fatigue can cause follow-through drop-offs on details.",
+        "what": "Implementation intentions linking high energy moments to structured execution commitments.",
+        "how": [
+          "Pair every new exciting commitment with a written calendar slot immediately.",
+          "Use the 'Rule of Two': Only take on a new initiative once two existing projects are finalized.",
+          "Engage an accountability buddy or shared dashboard to report completion milestones."
+        ],
+        "measure": "Higher completion percentage for initiated personal and professional projects.",
+        "professional_support_when": "If overcommitment leads to chronic unreliability or severe life disruption."
+      }
+    }
+  ]
+}

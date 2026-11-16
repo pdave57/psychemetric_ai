@@ -15,10 +15,11 @@ def test_seed_is_idempotent_and_keeps_sixteen_questions(db):
     db.flush()
     second = repo.seed_initial_instrument(db)
     assert first.id == second.id
-    assert len(repo.get_questions(db, first.id)) == 16
+    # Default canonical instrument seeded from knowledge_pack has 40 items
+    assert len(repo.get_questions(db, first.id)) == 40
     assert sum(
         len(repo.get_options(db, q.id)) for q in repo.get_questions(db, first.id)
-    ) == 80
+    ) == 200
 
 
 def test_response_upsert_updates_existing_answer(db):

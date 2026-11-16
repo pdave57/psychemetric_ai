@@ -8,8 +8,8 @@ class AssessmentStartRequest(BaseModel):
     """Body for POST /api/v1/assessments/start."""
 
     user_id:            str = Field(min_length=1, max_length=320)
-    instrument_code:    str = "innermap_temperament"
-    instrument_version: str = "0.1.0"
+    instrument_code:    str = "psychemetre_temperament_40"
+    instrument_version: str = "1.0.0"
 
 
 class AnswerSubmitRequest(BaseModel):

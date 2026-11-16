@@ -1,11 +1,12 @@
-"""Assessment repository: seed data, instrument lookup, session management,
-and response persistence.
+"""Assessment repository: seeds standard instruments from knowledge_pack,
+instrument lookup, session management, and response persistence.
 
 All functions perform queries, adds, and flushes — they do NOT commit.
 Transaction ownership (commit / rollback) belongs to the service layer.
 """
 
 from decimal import Decimal
+from typing import List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -19,98 +20,207 @@ from app.models import (
     SessionStatus,
     ItemKind,
 )
+from app.knowledge_pack import (
+    get_temperament_bank,
+    get_emotional_intelligence_bank,
+    get_answer_options,
+)
 
-# ---------------------------------------------------------------------------
-# Seed data: prototype 16-item temperament questionnaire
-# ---------------------------------------------------------------------------
+# Canonical instrument metadata
+TEMPERAMENT_40_CODE = "psychemetre_temperament_40"
+TEMPERAMENT_40_VERSION = "1.0.0"
 
-# (code, text, area, dimension_load, reverse_coded)
-# Stored as forced_choice items; the 'loads' field carries per-dimension weight.
-_ITEMS = [
-    ("SAN01", "I feel energised when interacting with a group of people.",       "social_behaviour",  "sanguine",   False),
-    ("SAN02", "I readily express excitement when something interests me.",        "social_behaviour",  "sanguine",   False),
-    ("SAN03", "I enjoy spontaneous social activities.",                           "social_behaviour",  "sanguine",   False),
-    ("SAN04", "I usually prefer to keep to myself at social gatherings.",         "social_behaviour",  "sanguine",   True),
-    ("CHO01", "I am comfortable taking the lead when a decision is needed.",      "decision_making",   "choleric",   False),
-    ("CHO02", "I make decisions promptly when I have enough information.",        "decision_making",   "choleric",   False),
-    ("CHO03", "I set challenging goals and work persistently toward them.",       "goal_setting",      "choleric",   False),
-    ("CHO04", "I avoid taking responsibility when a group needs direction.",      "decision_making",   "choleric",   True),
-    ("MEL01", "I think carefully about details before completing a task.",        "analytical",        "melancholic",False),
-    ("MEL02", "I reflect on my experiences to understand what went well or badly.","analytical",       "melancholic",False),
-    ("MEL03", "I notice small errors or inconsistencies in my work.",             "analytical",        "melancholic",False),
-    ("MEL04", "I rarely think through the possible consequences of my decisions.","analytical",        "melancholic",True),
-    ("PHL01", "I remain patient when other people disagree with me.",             "interpersonal",     "phlegmatic", False),
-    ("PHL02", "I prefer to resolve disagreements calmly.",                        "interpersonal",     "phlegmatic", False),
-    ("PHL03", "People can generally rely on me to be steady and consistent.",     "interpersonal",     "phlegmatic", False),
-    ("PHL04", "I become impatient quickly when plans change.",                    "interpersonal",     "phlegmatic", True),
-]
+EQ_25_CODE = "psychemetre_eq_25"
+EQ_25_VERSION = "1.0.0"
 
-# Likert-scale options shared across all items.
-_OPTIONS = [
-    ("strongly_disagree", "Strongly disagree"),
-    ("disagree",          "Disagree"),
-    ("neutral",           "Neither agree nor disagree"),
-    ("agree",             "Agree"),
-    ("strongly_agree",    "Strongly agree"),
-]
-
-_INSTRUMENT_CODE    = "innermap_temperament"
-_INSTRUMENT_VERSION = "0.1.0"
+# Legacy alias for backward compatibility with existing tests
+LEGACY_INSTRUMENT_CODE = "innermap_temperament"
+LEGACY_INSTRUMENT_VERSION = "0.1.0"
 
 
-def seed_initial_instrument(db: Session) -> AssessmentVersion:
-    """Idempotently seed the prototype instrument and its questions.
-
-    Returns the existing row if already present, so repeated calls on
-    the same database are safe.
-    """
+def seed_instrument_from_knowledge_pack(
+    db: Session,
+    instrument_code: str = TEMPERAMENT_40_CODE,
+    version: str = TEMPERAMENT_40_VERSION
+) -> AssessmentVersion:
+    """Seed the comprehensive 40-item temperament instrument from knowledge_pack."""
     existing = db.scalar(
         select(AssessmentVersion).where(
-            AssessmentVersion.instrument == _INSTRUMENT_CODE,
-            AssessmentVersion.version   == _INSTRUMENT_VERSION,
+            AssessmentVersion.instrument == instrument_code,
+            AssessmentVersion.version == version,
         )
     )
     if existing:
         return existing
 
+    bank = get_temperament_bank()
+    options_data = get_answer_options()["scales"]["likert_5_agreement"]["options"]
+
     instrument = AssessmentVersion(
-        instrument     = _INSTRUMENT_CODE,
-        version        = _INSTRUMENT_VERSION,
-        status         = "draft",
-        config         = {"scale_min": 1, "scale_max": 5},
-        content_sha256 = "prototype-no-hash",
+        instrument=instrument_code,
+        version=version,
+        status="published",
+        config={"scale_min": 1, "scale_max": 5, "total_items": 40},
+        content_sha256="psychemetre_temperament_40_v1",
     )
     db.add(instrument)
-    db.flush()  # Obtain instrument.id before inserting questions.
+    db.flush()
 
-    for n, (code, text, area, dimension, reverse) in enumerate(_ITEMS, start=1):
+    for q_data in bank["questions"]:
         q = Question(
-            version_id   = instrument.id,
-            code         = code,
-            text         = text,
-            area         = area,
-            kind         = ItemKind.likert,
-            weight       = Decimal("1.0"),
-            is_core      = True,
-            reverse_coded= reverse,
-            loads        = {dimension: 1.0},
-            sort_order   = n,
+            version_id=instrument.id,
+            code=q_data["code"],
+            text=q_data["text"],
+            area=q_data.get("area", "general"),
+            kind=ItemKind.likert,
+            weight=Decimal(str(q_data.get("weight", 1.0))),
+            is_core=True,
+            reverse_coded=q_data.get("reverse_coded", False),
+            loads={q_data["dimension"]: 1.0},
+            sort_order=q_data["sort_order"],
         )
         db.add(q)
-        db.flush()  # Obtain q.id before inserting options.
+        db.flush()
 
         db.add_all([
             QuestionOption(
-                question_id = q.id,
-                code        = opt_code,
-                text        = opt_text,
-                evidence    = {},
+                question_id=q.id,
+                code=opt["code"],
+                text=opt["label"],
+                evidence={},
             )
-            for opt_code, opt_text in _OPTIONS
+            for opt in options_data
         ])
 
     db.commit()
     return instrument
+
+
+def seed_eq_instrument(
+    db: Session,
+    instrument_code: str = EQ_25_CODE,
+    version: str = EQ_25_VERSION
+) -> AssessmentVersion:
+    """Seed the 25-item emotional intelligence instrument from knowledge_pack."""
+    existing = db.scalar(
+        select(AssessmentVersion).where(
+            AssessmentVersion.instrument == instrument_code,
+            AssessmentVersion.version == version,
+        )
+    )
+    if existing:
+        return existing
+
+    bank = get_emotional_intelligence_bank()
+    options_data = get_answer_options()["scales"]["likert_5_agreement"]["options"]
+
+    instrument = AssessmentVersion(
+        instrument=instrument_code,
+        version=version,
+        status="published",
+        config={"scale_min": 1, "scale_max": 5, "total_items": 25},
+        content_sha256="psychemetre_eq_25_v1",
+    )
+    db.add(instrument)
+    db.flush()
+
+    for q_data in bank["questions"]:
+        q = Question(
+            version_id=instrument.id,
+            code=q_data["code"],
+            text=q_data["text"],
+            area=q_data.get("dimension", "general"),
+            kind=ItemKind.likert,
+            weight=Decimal(str(q_data.get("weight", 1.0))),
+            is_core=True,
+            reverse_coded=q_data.get("reverse_coded", False),
+            loads={q_data["dimension"]: 1.0},
+            sort_order=q_data["sort_order"],
+        )
+        db.add(q)
+        db.flush()
+
+        db.add_all([
+            QuestionOption(
+                question_id=q.id,
+                code=opt["code"],
+                text=opt["label"],
+                evidence={},
+            )
+            for opt in options_data
+        ])
+
+    db.commit()
+    return instrument
+
+
+def seed_initial_instrument(db: Session) -> AssessmentVersion:
+    """Seed instruments idempotently.
+
+    Seeds:
+      1. Default 40-item Psychemetre Temperament Instrument
+      2. 25-item Emotional Intelligence Instrument
+      3. Legacy 16-item alias (for test compatibility)
+    """
+    # 1. 40-item canonical instrument
+    canonical_inst = seed_instrument_from_knowledge_pack(db, TEMPERAMENT_40_CODE, TEMPERAMENT_40_VERSION)
+
+    # 2. 25-item EQ instrument
+    seed_eq_instrument(db, EQ_25_CODE, EQ_25_VERSION)
+
+    # 3. Seed legacy 16-item alias pointing to first 16 items for backward compat
+    existing_legacy = db.scalar(
+        select(AssessmentVersion).where(
+            AssessmentVersion.instrument == LEGACY_INSTRUMENT_CODE,
+            AssessmentVersion.version == LEGACY_INSTRUMENT_VERSION,
+        )
+    )
+    if not existing_legacy:
+        bank = get_temperament_bank()
+        options_data = get_answer_options()["scales"]["likert_5_agreement"]["options"]
+        legacy_inst = AssessmentVersion(
+            instrument=LEGACY_INSTRUMENT_CODE,
+            version=LEGACY_INSTRUMENT_VERSION,
+            status="published",
+            config={"scale_min": 1, "scale_max": 5, "total_items": 16},
+            content_sha256="innermap_prototype_16",
+        )
+        db.add(legacy_inst)
+        db.flush()
+
+        # Seed 4 items per dimension = 16 items
+        items_16 = []
+        for d in ["sanguine", "choleric", "melancholic", "phlegmatic"]:
+            items_16.extend([q for q in bank["questions"] if q["dimension"] == d][:4])
+
+        for n, q_data in enumerate(items_16, start=1):
+            q = Question(
+                version_id=legacy_inst.id,
+                code=q_data["code"],
+                text=q_data["text"],
+                area=q_data.get("area", "general"),
+                kind=ItemKind.likert,
+                weight=Decimal("1.0"),
+                is_core=True,
+                reverse_coded=q_data.get("reverse_coded", False),
+                loads={q_data["dimension"]: 1.0},
+                sort_order=n,
+            )
+            db.add(q)
+            db.flush()
+
+            db.add_all([
+                QuestionOption(
+                    question_id=q.id,
+                    code=opt["code"],
+                    text=opt["label"],
+                    evidence={},
+                )
+                for opt in options_data
+            ])
+        db.commit()
+
+    return canonical_inst
 
 
 # ---------------------------------------------------------------------------
@@ -118,12 +228,12 @@ def seed_initial_instrument(db: Session) -> AssessmentVersion:
 # ---------------------------------------------------------------------------
 
 
-def get_instrument(db: Session, code: str, version: str) -> AssessmentVersion | None:
+def get_instrument(db: Session, code: str, version: str) -> Optional[AssessmentVersion]:
     """Return an instrument version by its (code, version) pair, or None."""
     return db.scalar(
         select(AssessmentVersion).where(
             AssessmentVersion.instrument == code,
-            AssessmentVersion.version    == version,
+            AssessmentVersion.version == version,
         )
     )
 
@@ -134,11 +244,7 @@ def get_instrument(db: Session, code: str, version: str) -> AssessmentVersion | 
 
 
 def create_session(db: Session, user_id, instrument: AssessmentVersion) -> AssessmentSession:
-    """Create and persist an in-progress session for *user_id* on *instrument*.
-
-    ``user_id`` may be a UUID object or a string; the column type is Uuid
-    so SQLAlchemy handles coercion.  The service layer owns the commit.
-    """
+    """Create and persist an in-progress session for *user_id* on *instrument*."""
     s = AssessmentSession(user_id=user_id, version_id=instrument.id)
     db.add(s)
     db.commit()
@@ -151,7 +257,7 @@ def create_session(db: Session, user_id, instrument: AssessmentVersion) -> Asses
 # ---------------------------------------------------------------------------
 
 
-def get_questions(db: Session, version_id) -> list[Question]:
+def get_questions(db: Session, version_id) -> List[Question]:
     """Return all questions for *version_id* ordered by sort_order."""
     return db.scalars(
         select(Question)
@@ -160,7 +266,7 @@ def get_questions(db: Session, version_id) -> list[Question]:
     ).all()
 
 
-def get_options(db: Session, question_id) -> list[QuestionOption]:
+def get_options(db: Session, question_id) -> List[QuestionOption]:
     """Return all options for *question_id* ordered by code."""
     return db.scalars(
         select(QuestionOption)
@@ -174,7 +280,7 @@ def get_options(db: Session, question_id) -> list[QuestionOption]:
 # ---------------------------------------------------------------------------
 
 
-def get_responses(db: Session, session_id) -> list[UserResponse]:
+def get_responses(db: Session, session_id) -> List[UserResponse]:
     """Return all responses submitted in *session_id*."""
     return db.scalars(
         select(UserResponse).where(UserResponse.session_id == session_id)
@@ -182,14 +288,10 @@ def get_responses(db: Session, session_id) -> list[UserResponse]:
 
 
 def save_response(db: Session, session_id, question_id, likert_value: int, seq: int) -> UserResponse:
-    """Upsert a Likert response for *(session_id, question_id)*.
-
-    If a response already exists it is updated in place.  The caller
-    must flush or commit after calling this function.
-    """
+    """Upsert a Likert response for *(session_id, question_id)*."""
     r = db.scalar(
         select(UserResponse).where(
-            UserResponse.session_id  == session_id,
+            UserResponse.session_id == session_id,
             UserResponse.question_id == question_id,
         )
     )
@@ -197,10 +299,10 @@ def save_response(db: Session, session_id, question_id, likert_value: int, seq: 
         r.likert_value = likert_value
     else:
         r = UserResponse(
-            session_id   = session_id,
-            question_id  = question_id,
-            likert_value = likert_value,
-            seq          = seq,
+            session_id=session_id,
+            question_id=question_id,
+            likert_value=likert_value,
+            seq=seq,
         )
         db.add(r)
     db.flush()

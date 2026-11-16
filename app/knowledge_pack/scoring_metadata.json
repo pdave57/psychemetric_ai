@@ -1,0 +1,42 @@
+{
+  "scoring_version": "psychemetre_v1.0.0",
+  "disclaimer": "The Four Temperaments and Emotional Competencies are reflective self-exploration frameworks, not clinical psychological diagnoses. Scores represent self-reported inclinations.",
+  "instruments": {
+    "temperament": {
+      "code": "psychemetre_temperament_40",
+      "scale_min": 1,
+      "scale_max": 5,
+      "minimum_answers_per_dimension": 6,
+      "formula": "normalized_score = round(((raw_mean - 1) / (scale_max - 1)) * 100, 1)",
+      "reverse_score_formula": "corrected_value = (scale_min + scale_max) - raw_value",
+      "bands": [
+        {"name": "Low", "range": [0.0, 39.9], "interpretation": "Less frequently endorsed in everyday behavior; not absent, but less dominant."},
+        {"name": "Moderate", "range": [40.0, 69.9], "interpretation": "Moderately expressed; situational context and conscious choice often shape this tendency."},
+        {"name": "High", "range": [70.0, 100.0], "interpretation": "Prominently endorsed; a habitual reflective style in social, decision-making, or task settings."}
+      ]
+    },
+    "emotional_intelligence": {
+      "code": "psychemetre_eq_25",
+      "scale_min": 1,
+      "scale_max": 5,
+      "minimum_answers_per_dimension": 3,
+      "formula": "normalized_score = round(((raw_mean - 1) / (scale_max - 1)) * 100, 1)",
+      "reverse_score_formula": "corrected_value = (scale_min + scale_max) - raw_value",
+      "bands": [
+        {"name": "Developing", "range": [0.0, 49.9], "interpretation": "Opportunity for intentional practice and growth in this emotional competency."},
+        {"name": "Proficient", "range": [50.0, 74.9], "interpretation": "Solid, dependable emotional skill applied consistently in routine situations."},
+        {"name": "Strong", "range": [75.0, 100.0], "interpretation": "Highly developed emotional capability that serves as an anchor under stress."}
+      ]
+    },
+    "emotion_burden": {
+      "formula": "burden_index = round(((freq_weight * intensity * duration_weight) / 160.0) * 100, 1)",
+      "frequency_weights": {"rarely": 1, "sometimes": 2, "often": 3, "very_often": 4},
+      "duration_weights": {"minutes": 1, "hours": 2, "days": 3, "weeks": 4, "varies": 2},
+      "bands": [
+        {"band": "low", "range": [0.0, 29.9], "description": "Mild or transient emotional presence; easily managed with standard routines."},
+        {"band": "moderate", "range": [30.0, 59.9], "description": "Noticeable emotional load; benefits from targeted self-regulation exercises."},
+        {"band": "high", "range": [60.0, 100.0], "description": "Elevated emotional strain; proactive interventions and structured support recommended."}
+      ]
+    }
+  }
+}
