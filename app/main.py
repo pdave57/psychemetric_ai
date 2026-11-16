@@ -45,6 +45,14 @@ app = FastAPI(
 
 @app.on_event("startup")
 def startup():
+    if "postgres" in str(engine.url):
+        try:
+            with engine.connect() as conn:
+                from sqlalchemy import text
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+                conn.commit()
+        except Exception:
+            pass
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:

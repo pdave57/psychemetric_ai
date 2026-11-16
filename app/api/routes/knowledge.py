@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.knowledge.ingestion import ingest_document, LicenseMissingError
+from app.knowledge.ingestion import ingest_document, ingest_corpus_manifest, LicenseMissingError
 from app.knowledge.retrieval import search_knowledge_base
 from app.models.enums import EvidenceLevel
 
@@ -54,15 +54,39 @@ def ingest_text_document(payload: IngestionRequest, db: Session = Depends(get_db
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.post("/corpus/ingest", status_code=status.HTTP_200_OK)
+def trigger_corpus_ingestion(
+    force_reload: bool = False,
+    db: Session = Depends(get_db)
+):
+    """Trigger ingestion of verified corpus manifest documents into knowledge base."""
+    try:
+        result = ingest_corpus_manifest(db=db, force_reload=force_reload)
+        return result
+    except LicenseMissingError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/search")
 def search_knowledge(
     query: str,
     collection: Optional[str] = None,
+    topic: Optional[str] = None,
+    subscale: Optional[str] = None,
+    concept: Optional[str] = None,
     limit: int = 5,
     db: Session = Depends(get_db)
 ):
     """Retrieve supporting research citations and chunks for a query."""
     if not query.strip():
         return {"query": query, "results": []}
-    results = search_knowledge_base(db, query=query, collection=collection, limit=limit)
+    results = search_knowledge_base(
+        db,
+        query=query,
+        collection=collection,
+        topic=topic,
+        subscale=subscale,
+        concept=concept,
+        limit=limit,
+    )
     return {"query": query, "count": len(results), "results": results}

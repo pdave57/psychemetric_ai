@@ -1,11 +1,11 @@
 services:
   db:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     environment:
       POSTGRES_DB: psychemetredb
       POSTGRES_USER: psychemetre
       POSTGRES_PASSWORD: letmein@123
-    ports: ["5432:5432"]
+    ports: ["${DB_PORT:-5433}:5432"]
     volumes: [psychemetre_pgdata:/var/lib/postgresql/data]
   api:
     build: .

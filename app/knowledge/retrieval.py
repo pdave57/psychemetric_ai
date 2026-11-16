@@ -22,9 +22,12 @@ def search_knowledge_base(
     db: Session,
     query: str,
     collection: Optional[str] = None,
+    topic: Optional[str] = None,
+    subscale: Optional[str] = None,
+    concept: Optional[str] = None,
     limit: int = 5
 ) -> List[Dict[str, Any]]:
-    """Hybrid search combining keyword frequency and vector similarity."""
+    """Hybrid search combining keyword frequency, vector similarity, and metadata filtering."""
     query_vec = generate_embedding(query)
     query_words = set(query.lower().split())
 
@@ -33,6 +36,12 @@ def search_knowledge_base(
     )
     if collection:
         stmt = stmt.where(KnowledgeDocument.collection == collection)
+    if topic:
+        stmt = stmt.where(KnowledgeChunk.topic == topic)
+    if subscale:
+        stmt = stmt.where(KnowledgeChunk.content.ilike(f"%Subscale: {subscale}%"))
+    if concept:
+        stmt = stmt.where(KnowledgeChunk.content.ilike(f"%Concept: {concept}%"))
 
     rows = db.execute(stmt).all()
     results = []
@@ -63,6 +72,8 @@ def search_knowledge_base(
             "document_id": doc.id,
             "title": doc.title,
             "collection": doc.collection,
+            "topic": chunk.topic,
+            "page": chunk.page,
             "license": doc.license,
             "evidence": doc.evidence.value if hasattr(doc.evidence, "value") else str(doc.evidence),
             "content": chunk.content,

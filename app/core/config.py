@@ -2,7 +2,7 @@
 import os
 
 APP_ENV = os.getenv("APP_ENV", "development").strip().lower()
-_raw_database_url = os.getenv("DATABASE_URL", "sqlite:///./psychemetre.db").strip()
+_raw_database_url = os.getenv("DATABASE_URL", "sqlite:///./psychemetre.db").strip() or "sqlite:///./psychemetre.db"
 # Render and some managed PostgreSQL providers still supply the legacy scheme.
 if _raw_database_url.startswith("postgres://"):
     _raw_database_url = "postgresql+psycopg://" + _raw_database_url.removeprefix("postgres://")

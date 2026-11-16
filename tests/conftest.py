@@ -28,3 +28,16 @@ def db():
     session.close()
     Base.metadata.drop_all(bind=engine)
     engine.dispose()
+
+
+@pytest.fixture()
+def client(db):
+    """Yield a FastAPI TestClient configured to use the in-memory test db."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.core.database import get_db
+    app.dependency_overrides[get_db] = lambda: db
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
