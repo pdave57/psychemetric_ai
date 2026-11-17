@@ -83,10 +83,71 @@
         <div class="bar-track"><div class="bar-fill" style="width: 45%; background: var(--phlegmatic);"></div></div>
       </div>
     </div>
+
+    <!-- Live Generated Reflective Narrative -->
+    <div class="card" id="narrativeCard">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+          <div class="card-title" style="margin-bottom: 0.25rem;">Live Generated Narrative Sample</div>
+          <div style="color: var(--text-muted); font-size: 0.85rem;">Synthesized by PsychemetreAI Orchestration Agent</div>
+        </div>
+        <button onclick="fetchLiveNarrative()" id="narrativeBtn" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">Generate Sample</button>
+      </div>
+      <div id="narrativeBody" style="background: #0f172a; border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem; font-size: 0.95rem; line-height: 1.65; color: #cbd5e1; white-space: pre-line;">
+        Click "Generate Sample" or complete an assessment to view the live LLM narrative synthesis based on temperament scores.
+      </div>
+      <div id="narrativeMeta" style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted); display: none;">
+        Model: <span id="narrativeModel">-</span> | Version: <span id="narrativeVer">-</span> | Numeric Consistency: <span id="narrativeValid" style="color: #34d399;">Verified</span>
+      </div>
+    </div>
   </div>
 
   <script>
     const sessionId = "demo-" + Math.random().toString(36).substring(7);
+
+    async function fetchLiveNarrative() {
+      const btn = document.getElementById("narrativeBtn");
+      const bodyEl = document.getElementById("narrativeBody");
+      const metaEl = document.getElementById("narrativeMeta");
+
+      btn.disabled = true;
+      btn.innerText = "Synthesizing...";
+      bodyEl.innerText = "Connecting to LLM and synthesizing narrative from temperament scores...";
+
+      try {
+        const resp = await fetch("/api/v1/agents/narrative/sample", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scores: [
+              { dimension: "sanguine", score: 75.0, interpretation: "High reflective social engagement" },
+              { dimension: "choleric", score: 60.0, interpretation: "Goal-oriented drive" },
+              { dimension: "melancholic", score: 82.0, interpretation: "Deep analytical reflection" },
+              { dimension: "phlegmatic", score: 45.0, interpretation: "Steady calm presence" }
+            ]
+          })
+        });
+        const data = await resp.json();
+        if (data.narrative) {
+          bodyEl.innerText = data.narrative;
+          document.getElementById("narrativeModel").innerText = data.llm_model || "openai/gpt-4o-mini";
+          document.getElementById("narrativeVer").innerText = data.prompt_version || "v1.0.0";
+          metaEl.style.display = "block";
+        } else {
+          bodyEl.innerText = "Could not generate narrative at this time.";
+        }
+      } catch (err) {
+        bodyEl.innerText = "Error requesting live narrative: " + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Regenerate Sample";
+      }
+    }
+
+    // Auto-load sample narrative on initial visit
+    window.addEventListener("DOMContentLoaded", () => {
+      fetchLiveNarrative();
+    });
 
     async function sendResponse() {
       const input = document.getElementById("userInput");

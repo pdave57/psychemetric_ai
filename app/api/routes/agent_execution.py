@@ -80,6 +80,33 @@ def run_agent_step(payload: AgentStepRequest, db: Session = Depends(get_db)):
     }
 
 
+class NarrativeSampleRequest(BaseModel):
+    user_id: str = "demo_user"
+    scores: Optional[list[dict]] = None
+
+
+@router.post("/narrative/sample")
+def generate_sample_narrative(payload: Optional[NarrativeSampleRequest] = None):
+    """Generate a live reflective narrative sample using the active LLM."""
+    scores = (payload and payload.scores) or [
+        {"dimension": "sanguine", "score": 75.0, "interpretation": "High reflective social engagement"},
+        {"dimension": "choleric", "score": 60.0, "interpretation": "Goal-oriented drive"},
+        {"dimension": "melancholic", "score": 82.0, "interpretation": "Deep analytical reflection"},
+        {"dimension": "phlegmatic", "score": 45.0, "interpretation": "Steady calm presence"},
+    ]
+    user_id = (payload and payload.user_id) or "demo_user"
+    from app.services.narrative_service import generate_narrative_report
+    report = generate_narrative_report(scores=scores, user_id=user_id)
+    return {
+        "status": "success",
+        "scores": scores,
+        "narrative": report.get("narrative"),
+        "llm_model": report.get("llm_model"),
+        "prompt_version": report.get("prompt_version"),
+        "numeric_consistency_verified": report.get("numeric_consistency_verified"),
+    }
+
+
 @router.get("/stream/{session_id}")
 async def stream_assessment_events(session_id: str):
     """Server-Sent Events (SSE) stream delivering assessment events in real-time."""

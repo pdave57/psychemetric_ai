@@ -204,6 +204,8 @@ def complete_assessment(db: Session, session_id):
         "temperament_scores":  output,
         "emotion_assessments": emotion_payload,
         "study_summary":       narrative_payload.get("narrative"),
+        "narrative":           narrative_payload.get("narrative"),
+        "narrative_report":    narrative_payload,
         "leading_tendencies":  [x["dimension"] for x in leaders[:2]],
         "disclaimer":          DISCLAIMER,
     }
