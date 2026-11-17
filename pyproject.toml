@@ -1,6 +1,7 @@
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["tests", "knowledge_base/tests"]
+testpaths = ["tests", "knowledge_base/tests", "app/evaluation"]
+python_files = ["test_*.py", "*_tests.py", "*_test.py"]
 filterwarnings = [
     "ignore::DeprecationWarning",
 ]

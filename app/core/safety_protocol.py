@@ -35,9 +35,11 @@ VERIFIED_RESOURCES = [
 
 # Crisis screening pattern indicators
 CRITICAL_PATTERNS = [
-    "suicide", "kill myself", "end my life", "want to die", "commit suicide",
-    "better off dead", "cutting myself", "self harm", "take my own life",
-    "hang myself", "overdose", "slit my wrists"
+    "suicide", "kill myself", "killing myself", "end my life", "ending my life",
+    "want to die", "commit suicide", "better off dead", "cutting myself", "cut myself",
+    "self harm", "self-harm", "take my own life", "take my life", "taking my life",
+    "taking my own life", "hang myself", "hanging myself", "overdose", "overdosing",
+    "slit my wrists", "slit my wrist", "slitting my wrists"
 ]
 
 HIGH_PATTERNS = [
