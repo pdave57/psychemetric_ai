@@ -90,8 +90,40 @@ export interface Report {
   [key: string]: unknown;
 }
 
-export interface Recommendation {
-  [key: string]: unknown;
+export interface RecommendationItem {
+  id: string;
+  template_id: string;
+  title: string | Record<string, unknown>;
+  body: Record<string, unknown> | string;
+  status: string;
+  rationale: Record<string, unknown>;
+}
+
+export interface AssessmentResult {
+  session_id: string;
+  report_id?: string;
+  status?: string;
+  dominant?: string;
+  summary?: string;
+  scores?: Record<string, number>;
+  temperament_scores?: Array<Record<string, unknown>>;
+  emotion_assessments?: unknown[];
+  narrative: string;
+  motion: string;
+  recommendations: RecommendationItem[];
+  narrative_report?: unknown;
+  motion_report?: unknown;
+  llm_model?: string;
+  prompt_version?: string;
+  disclaimer?: string;
+}
+
+export interface ResultEvent {
+  type: 'narrative' | 'motion' | 'recommendations' | 'done' | 'error';
+  delta?: string;
+  session_id?: string;
+  recommendations?: RecommendationItem[];
+  message?: string;
 }
 
 export interface FeedbackRequest {
@@ -665,4 +697,106 @@ export function deleteMyAccount(): Promise<unknown> {
 
 export function health(): Promise<unknown> {
   return request<unknown>('/health', { method: 'GET' });
+}
+
+/* ------------------------------------------------------------------ */
+/* LLM-powered assessment results                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Generate (or regenerate) the aggregated LLM result for a completed
+ * session: narrative + trait motion + recommendations.
+ */
+export function fetchAssessmentResult(sessionId: string): Promise<AssessmentResult> {
+  return request<AssessmentResult>(
+    `/api/v1/results/sessions/${sessionId}/generate`,
+    { method: 'POST' },
+  );
+}
+
+/**
+ * Stream the LLM-generated result for a completed session as Server-Sent
+ * Events. Emits ``narrative`` and ``motion`` events with delta text as the
+ * LLM produces it, a ``recommendations`` event with the full recommendation
+ * payload, and a final ``done`` event.
+ */
+export function streamAssessmentResult(
+  sessionId: string,
+  onEvent: (event: ResultEvent) => void,
+  onClose?: () => void,
+): AbortController {
+  const controller = new AbortController();
+
+  (async () => {
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/v1/results/sessions/${sessionId}/stream`,
+        {
+          headers: {
+            Accept: 'text/event-stream',
+            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+          },
+          signal: controller.signal,
+        },
+      );
+
+      if (!res.ok || !res.body) {
+        onEvent({ type: 'error', message: `Result stream failed (${res.status})` });
+        onEvent({ type: 'done' });
+        onClose?.();
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      let currentEventType = 'done';
+
+      const flush = (line: string) => {
+        line = line.trim();
+        if (!line || line[0] === ':') {
+          return;
+        }
+        if (line.startsWith('event:')) {
+          currentEventType = line.slice(6).trim();
+          return;
+        }
+        if (line.startsWith('id:')) {
+          return;
+        }
+        if (line.startsWith('data:')) {
+          line = line.slice(5).trim();
+        }
+        if (!line) {
+          return;
+        }
+        try {
+          const parsed = JSON.parse(line);
+          onEvent({
+            type: (currentEventType as ResultEvent['type']) || 'done',
+            ...parsed,
+          } as ResultEvent);
+        } catch {
+          // ignore malformed lines
+        }
+      };
+
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+        lines.forEach(flush);
+      }
+      if (buf) flush(buf);
+      onEvent({ type: 'done' });
+      onClose?.();
+    } catch {
+      onEvent({ type: 'done' });
+      onClose?.();
+    }
+  })();
+
+  return controller;
 }

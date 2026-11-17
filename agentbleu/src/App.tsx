@@ -4,8 +4,14 @@ import {
   startAssessment,
   submitAnswer,
   completeAssessment,
+  getSessionRecommendations,
+  submitRecommendationFeedback,
   streamQuestions,
+  streamAssessmentResult,
+  fetchAssessmentResult,
   type AssessmentStartRequest,
+  type RecommendationItem,
+  type AssessmentResult,
 } from './api';
 import { useAuth } from './context/AuthContext';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
@@ -19,6 +25,11 @@ interface TemperamentResult {
   dominant: string;
   summary?: string;
   scores?: Record<string, number>;
+  narrative?: string;
+  motion?: string;
+  recommendations?: RecommendationItem[];
+  llm_model?: string;
+  prompt_version?: string;
 }
 
 function AssessmentApp() {
@@ -33,7 +44,15 @@ function AssessmentApp() {
   const [result, setResult] = useState<TemperamentResult | null>(null);
   const [loading, setLoading] = useState(false);
 
+  /* Live LLM result synthesis */
+  const [streaming, setStreaming] = useState(false);
+  const [narrativeText, setNarrativeText] = useState('');
+  const [motionText, setMotionText] = useState('');
+  const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
+  const [reportId, setReportId] = useState<string | null>(null);
+
   const controllerRef = useRef<ReturnType<typeof streamQuestions> | null>(null);
+  const resultStreamRef = useRef<ReturnType<typeof streamAssessmentResult> | null>(null);
   const runIdRef = useRef(0);
 
   const reset = useCallback(() => {
@@ -41,12 +60,21 @@ function AssessmentApp() {
       controllerRef.current.abort();
       controllerRef.current = null;
     }
+    if (resultStreamRef.current) {
+      resultStreamRef.current.abort();
+      resultStreamRef.current = null;
+    }
     setQuestions([]);
     setAnswers({});
     setIndex(0);
     setSessionId(null);
     setError(null);
     setResult(null);
+    setStreaming(false);
+    setNarrativeText('');
+    setMotionText('');
+    setRecommendations([]);
+    setReportId(null);
     setView('intro');
     setLoading(false);
     runIdRef.current += 1;
@@ -56,6 +84,9 @@ function AssessmentApp() {
     return () => {
       if (controllerRef.current) {
         controllerRef.current.abort();
+      }
+      if (resultStreamRef.current) {
+        resultStreamRef.current.abort();
       }
     };
   }, []);
@@ -239,6 +270,7 @@ function AssessmentApp() {
       dominant,
       summary: TEMPERAMENT_SUMMARIES[dominant] || '',
       scores,
+      narrative: `Your reflective responses indicate prominent tendencies in the ${dominant} dimension. This pattern reflects your unique preferences when engaging with social situations, problem-solving, and personal tasks.`,
     };
   };
 
@@ -308,18 +340,77 @@ function AssessmentApp() {
         Phlegmatic: 'Calm, steady and dependable. You keep your balance when others lose theirs.',
       };
 
+      const summary = resultData.summary || TEMPERAMENT_SUMMARIES[dominant] || '';
+
       setResult({
         dominant,
-        summary: resultData.summary || TEMPERAMENT_SUMMARIES[dominant] || '',
+        summary,
         scores: scoresMap,
+        narrative: '',
+        motion: '',
+        recommendations: [],
+        llm_model: (resultData as any).llm_model,
+        prompt_version: (resultData as any).prompt_version,
       });
+      setReportId((resultData as any).report_id ?? null);
+      setNarrativeText('');
+      setMotionText('');
+      setRecommendations([]);
+      setStreaming(true);
       setError(null);
       setView('result');
+
+      // Stream the LLM-generated narrative, trait motion, and recommendations.
+      try {
+        resultStreamRef.current = streamAssessmentResult(
+          sessionId!,
+          (event) => {
+            if (event.type === 'narrative') {
+              setNarrativeText((prev) => prev + (event.delta || ''));
+            } else if (event.type === 'motion') {
+              setMotionText((prev) => prev + (event.delta || ''));
+            } else if (event.type === 'recommendations') {
+              setRecommendations(Array.isArray(event.recommendations) ? event.recommendations : []);
+            }
+          },
+          () => {
+            setStreaming(false);
+            // Fallback: pull any recommendations already persisted server-side.
+            if (sessionId) {
+              getSessionRecommendations(sessionId).then((data: unknown) => {
+                const recs = (data as { [key: string]: unknown }).recommendations;
+                if (Array.isArray(recs) && recs.length > 0) {
+                  setRecommendations(recs);
+                }
+              }).catch(() => {
+                /* recommendations stay empty */
+              });
+            }
+          },
+        );
+      } catch (err) {
+        console.warn('Result stream failed', err);
+        setStreaming(false);
+        // One-shot fallback when streaming is unavailable.
+        fetchAssessmentResult(sessionId!).then((res: AssessmentResult) => {
+          setNarrativeText(res.narrative || '');
+          setMotionText(res.motion || '');
+          if (res.recommendations?.length > 0) {
+            setRecommendations(res.recommendations);
+          }
+        }).catch(() => {
+          setStreaming(false);
+        });
+      }
     } catch (err) {
       console.warn('Backend completeAssessment failed, calculating result locally:', err);
       // Fallback: calculate result from submitted answers so user always sees their result
       const localResult = analyseLocally();
       setResult(localResult);
+      setStreaming(false);
+      setNarrativeText(localResult.narrative || '');
+      setMotionText('');
+      setRecommendations([]);
       setError(null);
       setView('result');
     } finally {
@@ -333,6 +424,17 @@ function AssessmentApp() {
 
   const handleRestart = () => {
     reset();
+  };
+
+  const handleRecFeedback = async (recId: string, status: 'accepted' | 'dismissed' | 'in_progress') => {
+    try {
+      await submitRecommendationFeedback(recId, { event: 'status_change', status });
+      setRecommendations((prev) =>
+        prev.map((r) => (r.id === recId ? { ...r, status } : r)),
+      );
+    } catch (e) {
+      console.warn('Recommendation feedback failed', e);
+    }
   };
 
   const handleLogout = () => {
@@ -443,6 +545,16 @@ function AssessmentApp() {
                 <p className="count">Your dominant temperament</p>
                 <h2 id="rname">{result.dominant}</h2>
                 <p className="lead" id="rsummary">{result.summary ?? ''}</p>
+
+                {streaming && (
+                  <div className="stream-status" role="status" aria-live="polite">
+                    <span className="stream-dot" aria-hidden="true"></span>
+                    <span className="stream-dot" aria-hidden="true"></span>
+                    <span className="stream-dot" aria-hidden="true"></span>
+                    Agent Bleu is synthesizing your narrative, trait motion, and recommendations…
+                  </div>
+                )}
+
                 <div className="scores" id="scores">
                   {result.scores &&
                     Object.entries(result.scores).map(([k, v]) => (
@@ -452,6 +564,143 @@ function AssessmentApp() {
                         <span>{v}%</span>
                       </div>
                     ))}
+                </div>
+
+                {/* Live streamed narrative (Narrative Service) */}
+                {(streaming || narrativeText || result.narrative) && (
+                  <div className="narrative-card">
+                    <div className="narrative-header">
+                      <span className="narrative-title">Live Generated Reflective Narrative</span>
+                      <span className={`narrative-badge ${streaming ? 'streaming' : ''}`}>
+                        {streaming ? 'AI Synthesis • Streaming' : 'AI Synthesis'}
+                      </span>
+                    </div>
+                    <div className="narrative-text">
+                      {(narrativeText || result.narrative || '')
+                        .split('\n\n')
+                        .map((para, i) => (
+                          <p key={i}>{para.trim()}</p>
+                        ))}
+                      {streaming && <span className="stream-cursor" aria-hidden="true">▋</span>}
+                    </div>
+                    <div className="narrative-meta">
+                      Narrative Service • {result.llm_model ? `model: ${result.llm_model}` : 'framework fallback'}
+                      • {result.prompt_version || 'v1.0.0'} • Verified Non-Diagnostic
+                    </div>
+                  </div>
+                )}
+
+                {/* Live streamed trait motion (Motion Service) */}
+                {(streaming || motionText || result.motion) && (
+                  <div className="motion-card">
+                    <div className="narrative-header">
+                      <span className="narrative-title">Trait Motion — how your tendencies flow</span>
+                      <span className={`narrative-badge ${streaming ? 'streaming' : ''}`}>
+                        {streaming ? 'AI Synthesis • Streaming' : 'AI Synthesis'}
+                      </span>
+                    </div>
+                    <div className="narrative-text">
+                      {(motionText || result.motion || '')
+                        .split('\n\n')
+                        .map((para, i) => (
+                          <p key={i}>{para.trim()}</p>
+                        ))}
+                      {streaming && <span className="stream-cursor" aria-hidden="true">▋</span>}
+                    </div>
+                    <div className="narrative-meta">
+                      Motion Service • dynamic trait interplay • Verified Non-Diagnostic
+                    </div>
+                  </div>
+                )}
+
+                {/* Recommendations (Recommendation Service) */}
+                <section className="recommendations">
+                  <h3>Personalized Recommendations</h3>
+                  <p className="rec-note">
+                    Psychoeducational suggestions matched to your scores and emotion self-reports
+                    — not medical or psychiatric advice.
+                  </p>
+                  {recommendations.length > 0 ? (
+                    recommendations.map((rec) => {
+                      const body = rec.body;
+                      return (
+                        <div key={rec.id} className="rec-card">
+                          <div className="rec-head">
+                            <span className="rec-title">
+                              {typeof rec.title === 'string' ? rec.title : String(rec.template_id)}
+                            </span>
+                            <span className="rec-status">{rec.status}</span>
+                          </div>
+                          {body ? (
+                            <div className="rec-body">
+                              {typeof body === 'string' ? (
+                                <p>{body}</p>
+                              ) : (
+                                <>
+                                  {body.why && (
+                                    <p>
+                                      <span className="rec-label">Why it fits:</span> {String(body.why)}
+                                    </p>
+                                  )}
+                                  {body.what && (
+                                    <p>
+                                      <span className="rec-label">What to try:</span> {String(body.what)}
+                                    </p>
+                                  )}
+                                  {Array.isArray(body.how) && body.how.length > 0 && (
+                                    <>
+                                      <span className="rec-label">How:</span>
+                                      <ul className="rec-how">
+                                        {body.how.map((step, i) => (
+                                          <li key={i}>{String(step)}</li>
+                                        ))}
+                                      </ul>
+                                    </>
+                                  )}
+                                  {body.measure && (
+                                    <p>
+                                      <span className="rec-label">Check:</span> {String(body.measure)}
+                                    </p>
+                                  )}
+                                  {body.professional_support_when && (
+                                    <p className="rec-support">
+                                      <span className="rec-label">Consider support when:</span>{' '}
+                                      {String(body.professional_support_when)}
+                                    </p>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          ) : null}
+                          <div className="rec-actions">
+                            <button
+                              className="btn ghost rec-btn"
+                              onClick={() => handleRecFeedback(rec.id, 'accepted')}
+                            >
+                              Mark accepted
+                            </button>
+                            <button
+                              className="btn ghost rec-btn"
+                              onClick={() => handleRecFeedback(rec.id, 'dismissed')}
+                            >
+                              Dismiss
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="rec-empty">
+                      No recommendations were triggered for this session. Recommendations appear when
+                      your scores or emotion self-reports match a care guideline.
+                    </p>
+                  )}
+                </section>
+
+                <div className="result-meta">
+                  {reportId && <span>Report {reportId}</span>}
+                  {result.llm_model && <span>Model: {result.llm_model}</span>}
+                  <span>Synthesized by PsychemetreAI Orchestration Agent • Verified Non-Diagnostic</span>
                 </div>
               </>
             ) : null}
