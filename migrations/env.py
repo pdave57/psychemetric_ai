@@ -1,7 +1,7 @@
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, text
 
 from app.core.config import DATABASE_URL
 from app.core.database import Base
@@ -49,6 +49,8 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
+        if connection.dialect.name == "postgresql":
+            connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         context.configure(
             connection=connection,
             target_metadata=target_metadata,

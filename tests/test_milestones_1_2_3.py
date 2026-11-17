@@ -25,6 +25,35 @@ def client(db):
 
 # --- Milestone 1 Tests ---
 
+def test_auth_register_preflight_options_allowed(client):
+    resp = client.options(
+        "/api/v1/auth/register",
+        headers={
+            "Origin": "http://localhost:3000",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "authorization,content-type",
+        },
+    )
+    assert resp.status_code == 200
+    assert "access-control-allow-origin" in resp.headers
+    assert resp.headers["access-control-allow-origin"] in {"*", "http://localhost:3000"}
+
+
+def test_assessment_start_returns_session_id(client):
+    resp = client.post(
+        "/api/v1/assessments/start",
+        json={
+            "user_id": "user-session-id-check",
+            "instrument_code": "innermap_temperament",
+            "instrument_version": "0.1.0",
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "session_id" in data
+    assert data["session_id"] == str(data["id"])
+
+
 def test_auth_registration_login_and_consent(client):
     # 1. Reject under 18
     resp = client.post("/api/v1/auth/register", json={

@@ -18,6 +18,7 @@ def start(payload: AssessmentStartRequest, db: Session = Depends(get_db)):
     s, qs = start_assessment(db, payload.user_id, payload.instrument_code, payload.instrument_version)
     return {
         "id":          s.id,
+        "session_id":  str(s.id),
         "user_id":     s.user_id,
         "version_id":  s.version_id,
         "status":      s.status,
