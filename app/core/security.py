@@ -9,7 +9,11 @@ import time
 import uuid
 from typing import Optional
 
-SECRET_KEY = os.getenv("JWT_SECRET", "psychemetre-dev-secret-change-in-production-123456")
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SECRET_KEY = os.getenv("JWT_SECRET") or "psychemetre-dev-secret-change-in-production-123456"
 TOKEN_EXPIRE_SECONDS = 3600 * 24  # 24 hours
 REFRESH_EXPIRE_SECONDS = 3600 * 24 * 7  # 7 days
 
