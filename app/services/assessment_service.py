@@ -22,6 +22,7 @@ from app.models import (
     User,
     ConsentRecord,
     ConsentType,
+    EmotionAssessment,
 )
 from app.repositories import assessment_repository as repo
 from app.services.scoring_service import (
@@ -30,6 +31,7 @@ from app.services.scoring_service import (
     SCORING_VERSION,
     DIMENSIONS,
 )
+from app.services.narrative_service import generate_narrative_report
 
 DISCLAIMER = (
     "Classical temperaments are used as a reflective framework, not validated diagnoses. "
@@ -153,9 +155,36 @@ def complete_assessment(db: Session, session_id):
         ))
     db.flush()
 
+    emotion_rows = db.scalars(
+        select(EmotionAssessment).where(EmotionAssessment.session_id == session_id)
+    ).all()
+    emotion_payload = [
+        {
+            "emotion": row.emotion,
+            "frequency": row.frequency,
+            "intensity": row.intensity,
+            "duration": row.duration,
+            "impact": row.impact,
+            "burden_index": float(row.burden_index),
+            "band": row.band.value,
+        }
+        for row in emotion_rows
+    ]
+    narrative_payload = generate_narrative_report(
+        scores=output,
+        user_id=str(s.user_id),
+        emotion_rows=emotion_payload,
+    )
+
     report = AssessmentReport(
         session_id = session_id,
-        structured = {"temperament_scores": output},
+        structured = {
+            "temperament_scores": output,
+            "emotion_assessments": emotion_payload,
+        },
+        narrative = narrative_payload,
+        llm_model = narrative_payload.get("llm_model"),
+        prompt_version = narrative_payload.get("prompt_version"),
     )
     db.add(report)
     db.flush()
@@ -173,6 +202,8 @@ def complete_assessment(db: Session, session_id):
         "scoring_version":     SCORING_VERSION,
         "status":              "completed",
         "temperament_scores":  output,
+        "emotion_assessments": emotion_payload,
+        "study_summary":       narrative_payload.get("narrative"),
         "leading_tendencies":  [x["dimension"] for x in leaders[:2]],
         "disclaimer":          DISCLAIMER,
     }

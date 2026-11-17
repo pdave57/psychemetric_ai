@@ -357,111 +357,111 @@ function AssessmentApp() {
           </div>
         )}
 
-        <section id="intro" className={`intro ${view === 'intro' ? '' : 'hidden'}`}>
-          <h1>Answer a few questions. Agent Bleu reads your personality.</h1>
-          <p>
-            Each question has no right or wrong answer. Pick the response closest to your
-            first instinct.
-          </p>
-          {loading ? (
-            <button className="btn" disabled>Connecting…</button>
-          ) : (
-            <button className="btn" id="start" onClick={handleStart}>Start</button>
-          )}
-        </section>
+        {view === 'intro' && (
+          <section id="intro" className="intro">
+            <h1>Answer a few questions. Agent Bleu reads your personality.</h1>
+            <p>
+              Each question has no right or wrong answer. Pick the response closest to your
+              first instinct.
+            </p>
+            {loading ? (
+              <button className="btn" disabled>Connecting…</button>
+            ) : (
+              <button className="btn" id="start" onClick={handleStart}>Start</button>
+            )}
+          </section>
+        )}
 
-        <section
-          id="quiz"
-          className={`quiz ${view === 'quiz' ? '' : 'hidden'}`}
-        >
-          <div className="bar">
-            <div className="meta">
-              <div className="track" id="track" aria-hidden="true">
-                {questions.map((_, i) => (
-                  <i key={i} className={i <= index ? 'done' : ''} />
-                ))}
-              </div>
-              <div className="count" id="count" aria-live="polite">
-                {questions.length > 0 ? `${index + 1} of ${questions.length}` : ''}
-              </div>
-            </div>
-          </div>
-          <div id="notice"></div>
-          {currentQuestion ? (
-            <>
-              <h2 className="q-text" id="qtext">{currentQuestion.text}</h2>
-              <div className="options" id="options" role="radiogroup" aria-labelledby="qtext">
-                {currentQuestion.options.map((opt, i) => {
-                  const selected = answers[currentQuestion.id] === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      className="opt"
-                      role="radio"
-                      aria-checked={selected}
-                      onClick={() => handleChoose(opt.id)}
-                    >
-                      <kbd>{i + 1}</kbd>
-                      <span>{opt.text}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="actions">
-                <button className="btn ghost" id="back" onClick={handleBack} disabled={index === 0}>
-                  Back
-                </button>
-                <button
-                  className="btn"
-                  id="next"
-                  disabled={!answers[currentQuestion.id] || loading}
-                  onClick={handleNext}
-                >
-                  {index === questions.length - 1
-                    ? loading
-                      ? 'Analysing…'
-                      : 'See my result'
-                    : 'Next question'}
-                </button>
-              </div>
-              <p className="note">Tip: select your answer to continue.</p>
-            </>
-          ) : (
-            <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-              <h2 className="q-text" id="qtext">Connecting to Agent Bleu…</h2>
-              <p className="note">Streaming assessment questions…</p>
-            </div>
-          )}
-        </section>
-
-        <section
-          id="result"
-          className={`result ${view === 'result' ? '' : 'hidden'}`}
-        >
-          <div className="bar"></div>
-          {result ? (
-            <>
-              <p className="count">Your dominant temperament</p>
-              <h2 id="rname">{result.dominant}</h2>
-              <p className="lead" id="rsummary">{result.summary ?? ''}</p>
-              <div className="scores" id="scores">
-                {result.scores &&
-                  Object.entries(result.scores).map(([k, v]) => (
-                    <div key={k} className="score">
-                      <span>{k}</span>
-                      <div className="meter"><b data-w={v} style={{ width: `${v}%` }}></b></div>
-                      <span>{v}%</span>
-                    </div>
+        {view === 'quiz' && (
+          <section id="quiz" className="quiz">
+            <div className="bar">
+              <div className="meta">
+                <div className="track" id="track" aria-hidden="true">
+                  {questions.map((_, i) => (
+                    <i key={i} className={i <= index ? 'done' : ''} />
                   ))}
+                </div>
+                <div className="count" id="count" aria-live="polite">
+                  {questions.length > 0 ? `${index + 1} of ${questions.length}` : ''}
+                </div>
               </div>
-            </>
-          ) : null}
-          {result && (
-            <button className="btn ghost" id="restart" onClick={handleRestart}>
-              Retake analysis
-            </button>
-          )}
-        </section>
+            </div>
+            <div id="notice"></div>
+            {currentQuestion ? (
+              <>
+                <h2 className="q-text" id="qtext">{currentQuestion.text}</h2>
+                <div className="options" id="options" role="radiogroup" aria-labelledby="qtext">
+                  {currentQuestion.options.map((opt, i) => {
+                    const selected = answers[currentQuestion.id] === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        className="opt"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => handleChoose(opt.id)}
+                      >
+                        <kbd>{i + 1}</kbd>
+                        <span>{opt.text}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="actions">
+                  <button className="btn ghost" id="back" onClick={handleBack} disabled={index === 0}>
+                    Back
+                  </button>
+                  <button
+                    className="btn"
+                    id="next"
+                    disabled={!answers[currentQuestion.id] || loading}
+                    onClick={handleNext}
+                  >
+                    {index === questions.length - 1
+                      ? loading
+                        ? 'Analysing…'
+                        : 'See my result'
+                      : 'Next question'}
+                  </button>
+                </div>
+                <p className="note">Tip: select your answer to continue.</p>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                <h2 className="q-text" id="qtext">Connecting to Agent Bleu…</h2>
+                <p className="note">Streaming assessment questions…</p>
+              </div>
+            )}
+          </section>
+        )}
+
+        {view === 'result' && (
+          <section id="result" className="result">
+            <div className="bar"></div>
+            {result ? (
+              <>
+                <p className="count">Your dominant temperament</p>
+                <h2 id="rname">{result.dominant}</h2>
+                <p className="lead" id="rsummary">{result.summary ?? ''}</p>
+                <div className="scores" id="scores">
+                  {result.scores &&
+                    Object.entries(result.scores).map(([k, v]) => (
+                      <div key={k} className="score">
+                        <span>{k}</span>
+                        <div className="meter"><b data-w={v} style={{ width: `${v}%` }}></b></div>
+                        <span>{v}%</span>
+                      </div>
+                    ))}
+                </div>
+              </>
+            ) : null}
+            {result && (
+              <button className="btn ghost" id="restart" onClick={handleRestart}>
+                Retake analysis
+              </button>
+            )}
+          </section>
+        )}
 
         <button className="btn ghost" onClick={handleLogout} style={{ marginTop: '2rem', display: 'block', margin: '2rem auto 0' }}>
           Sign out

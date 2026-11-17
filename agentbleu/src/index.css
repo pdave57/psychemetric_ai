@@ -17,7 +17,7 @@ body{
 .wrap{max-width:40rem;margin:0 auto;padding:1.25rem 1.25rem 3rem}
 button{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--sky);outline-offset:3px;border-radius:6px}
-[hidden]{display:none!important}
+[hidden], .hidden{display:none!important}
 
 /* ---------- Header (centred logo) ---------- */
 .header{

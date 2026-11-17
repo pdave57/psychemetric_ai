@@ -53,28 +53,63 @@ def validate_numeric_consistency(narrative_text: str, scores: list[dict]) -> Tup
     return is_valid, discrepancies
 
 
+def format_emotion_context(emotion_rows: list[dict] | None) -> str:
+    """Render a compact, human-readable emotion summary for the LLM prompt."""
+    if not emotion_rows:
+        return "No emotion self-reports were submitted."
+
+    lines = []
+    for item in emotion_rows:
+        lines.append(
+            "- "
+            f"{item.get('emotion', 'emotion')}: "
+            f"intensity={item.get('intensity', 'n/a')}/10, "
+            f"frequency={item.get('frequency', 'n/a')}, "
+            f"duration={item.get('duration', 'n/a')}, "
+            f"impact={item.get('impact', 'n/a')}, "
+            f"burden_index={item.get('burden_index', 'n/a')}, "
+            f"band={item.get('band', 'n/a')}"
+        )
+    return "\n".join(lines)
+
+
 def generate_narrative_report(
     scores: list[dict],
     user_id: str,
-    llm: BaseLLM = None
+    llm: BaseLLM = None,
+    emotion_rows: list[dict] | None = None,
 ) -> Dict[str, Any]:
-    """Generate narrative synthesis with prompt versioning and numeric validation."""
+    """Generate a temperament + emotion narrative with prompt versioning and numeric validation."""
     llm = llm or get_llm()
 
     context = format_scores_context(scores)
-    prompt = f"User Scores:\n{context}\n\nPlease generate a 2-3 paragraph reflective summary."
+    emotion_context = format_emotion_context(emotion_rows)
+    prompt = (
+        f"User Scores:\n{context}\n\n"
+        f"Emotion Self-Reports:\n{emotion_context}\n\n"
+        "Please generate a 2-3 paragraph reflective summary that explains the temperament pattern and "
+        "how the reported emotions may reinforce or soften those tendencies."
+    )
 
     generated_text = llm.generate(prompt=prompt, system=NARRATIVE_SYSTEM_PROMPT, max_tokens=600)
 
-    # Validate numbers
+    # Validate numbers in the narrative, including temperament scores.
     is_valid, discrepancies = validate_numeric_consistency(generated_text, scores)
     if not is_valid:
-        # If discrepancy detected, fallback to safe deterministic synthesis
-        lead_dims = [s["dimension"] for s in sorted(scores, key=lambda x: x.get("score") or x.get("normalized_score") or 0, reverse=True)[:2]]
+        lead_dims = [
+            s["dimension"]
+            for s in sorted(
+                scores,
+                key=lambda x: x.get("score") or x.get("normalized_score") or 0,
+                reverse=True,
+            )[:2]
+        ]
+        if len(lead_dims) < 2:
+            lead_dims = [s["dimension"] for s in scores[:2]]
         generated_text = (
             f"Your responses suggest prominent reflective tendencies in the {lead_dims[0]} "
-            f"and {lead_dims[1]} dimensions. These reflect preferred ways of engaging with decisions, "
-            f"social contexts, and tasks."
+            f"and {lead_dims[1]} dimensions. These patterns can shape how you engage with decisions, "
+            f"social settings, and daily demands."
         )
 
     return {
