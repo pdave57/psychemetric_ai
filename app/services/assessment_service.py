@@ -105,6 +105,7 @@ def submit_answer(db: Session, session_id, question_id, likert_value: int):
     seq = len(existing_responses) + 1
 
     repo.save_response(db, session_id, question_id, likert_value, seq)
+    db.commit()
     return {"saved": True, "session_id": session_id, "question_id": question_id}
 
 
@@ -205,6 +206,7 @@ def complete_assessment(db: Session, session_id):
     db.commit()
 
     leaders = sorted(output, key=lambda x: x["normalized_score"], reverse=True)
+    dominant_dim = leaders[0]["dimension"].capitalize() if leaders else "Unknown"
     return {
         "session_id":          session_id,
         "report_id":           report.id,
@@ -212,6 +214,9 @@ def complete_assessment(db: Session, session_id):
         "instrument_version":  instrument.version,
         "scoring_version":     SCORING_VERSION,
         "status":              "completed",
+        "dominant":            dominant_dim,
+        "temperament":         dominant_dim,
+        "summary":             narrative_payload.get("narrative") or (describe_score(leaders[0]["normalized_score"]) if leaders else ""),
         "scores":              output,
         "temperament_scores":  output,
         "eq_scores":           output if is_eq else None,

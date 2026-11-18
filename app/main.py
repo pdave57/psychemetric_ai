@@ -49,8 +49,10 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
+        "http://localhost:4173",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
+        "http://127.0.0.1:4173",
         "https://localhost:3000",
         "https://127.0.0.1:3000",
     ],
@@ -102,14 +104,29 @@ for route, prefix, tag in [
 ]:
     app.include_router(route, prefix=prefix, tags=[tag])
 
-# Serve static dashboard if directory exists
+# Serve static frontend / SPA
 static_path = Path(__file__).resolve().parent / "static"
-if static_path.exists():
-    app.mount("/static", StaticFiles(directory=static_path), name="static")
+dist_path = Path(__file__).resolve().parent.parent / "agentbleu" / "dist"
+frontend_dir = dist_path if (dist_path / "index.html").exists() else static_path
+
+if frontend_dir.exists():
+    if (frontend_dir / "assets").exists():
+        app.mount("/assets", StaticFiles(directory=frontend_dir / "assets"), name="assets")
+    if (frontend_dir / "static").exists():
+        app.mount("/static", StaticFiles(directory=frontend_dir / "static"), name="static")
 
     @app.get("/")
     def serve_dashboard():
-        return FileResponse(static_path / "index.html")
+        return FileResponse(frontend_dir / "index.html")
+
+    @app.get("/{full_path:path}")
+    def serve_spa_fallback(full_path: str):
+        if full_path.startswith(("api/", "health", "docs", "redoc", "openapi.json")):
+            raise HTTPException(404, detail="Not Found")
+        target_file = frontend_dir / full_path
+        if target_file.is_file():
+            return FileResponse(target_file)
+        return FileResponse(frontend_dir / "index.html")
 
 
 @app.get("/health")

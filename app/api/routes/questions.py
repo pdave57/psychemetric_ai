@@ -34,6 +34,7 @@ router = APIRouter()
 def _question_payload(q, options) -> dict:
     """Serialize one question plus its answer options for SSE transport."""
     return {
+        "type":          "question",
         "id":            str(q.id),
         "code":          q.code,
         "text":          q.text,
@@ -68,6 +69,7 @@ async def _question_event_stream(
 
     complete = jsonable_encoder(
         {
+            "type": "complete",
             "session_id": str(session.id),
             "total_questions": total,
         }
