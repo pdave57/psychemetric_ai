@@ -5,10 +5,11 @@ All functions perform queries, adds, and flushes — they do NOT commit.
 Transaction ownership (commit / rollback) belongs to the service layer.
 """
 
+from collections import defaultdict
 from decimal import Decimal
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from app.models import (
@@ -307,3 +308,48 @@ def save_response(db: Session, session_id, question_id, likert_value: int, seq: 
         db.add(r)
     db.flush()
     return r
+
+
+def verify_eq_migration(db: Session) -> Dict[str, Any]:
+    """Verify EQ instrument migration status and return summary statistics."""
+    eq_version = db.scalar(
+        select(AssessmentVersion).where(
+            AssessmentVersion.instrument == EQ_25_CODE,
+            AssessmentVersion.version == EQ_25_VERSION,
+        )
+    )
+    if not eq_version:
+        return {"migrated": False, "reason": "AssessmentVersion record missing"}
+
+    questions = get_questions(db, eq_version.id)
+    options_count = db.scalar(
+        select(func.count(QuestionOption.id))
+        .join(Question, QuestionOption.question_id == Question.id)
+        .where(Question.version_id == eq_version.id)
+    ) or 0
+
+    dimension_counts = defaultdict(int)
+    for q in questions:
+        dim = q.area or (list(q.loads.keys())[0] if q.loads else "unknown")
+        dimension_counts[dim] += 1
+
+    return {
+        "migrated": len(questions) == 25,
+        "instrument_code": eq_version.instrument,
+        "version": eq_version.version,
+        "total_questions": len(questions),
+        "total_options": options_count,
+        "dimension_counts": dict(dimension_counts),
+        "status": eq_version.status,
+    }
+
+
+if __name__ == "__main__":
+    from app.core.database import SessionLocal, engine, Base
+    from app.models import *  # noqa: F401, F403
+    Base.metadata.create_all(bind=engine)
+    with SessionLocal() as session:
+        seed_initial_instrument(session)
+        stats = verify_eq_migration(session)
+        print("EQ Migration Status:", stats)
+

@@ -27,9 +27,11 @@ from app.models import (
 from app.repositories import assessment_repository as repo
 from app.services.scoring_service import (
     calculate_temperament_scores,
+    calculate_eq_scores,
     describe_score,
     SCORING_VERSION,
     DIMENSIONS,
+    EQ_DIMENSIONS,
 )
 from app.services.narrative_service import generate_narrative_report
 
@@ -136,10 +138,17 @@ def complete_assessment(db: Session, session_id):
         )
 
     # Map responses to the format expected by scoring_service.
-    values = calculate_temperament_scores(qs, rs)
+    is_eq = bool(instrument and instrument.instrument == "psychemetre_eq_25")
+    if is_eq:
+        values = calculate_eq_scores(qs, rs)
+        dimension_list = EQ_DIMENSIONS
+    else:
+        values = calculate_temperament_scores(qs, rs)
+        dimension_list = DIMENSIONS
+
     output = []
 
-    for d in DIMENSIONS:
+    for d in dimension_list:
         v = values[d]
         if v is None:
             continue
@@ -179,7 +188,9 @@ def complete_assessment(db: Session, session_id):
     report = AssessmentReport(
         session_id = session_id,
         structured = {
-            "temperament_scores": output,
+            "temperament_scores": output if not is_eq else [],
+            "eq_scores": output if is_eq else [],
+            "scores": output,
             "emotion_assessments": emotion_payload,
         },
         narrative = narrative_payload,
@@ -201,7 +212,9 @@ def complete_assessment(db: Session, session_id):
         "instrument_version":  instrument.version,
         "scoring_version":     SCORING_VERSION,
         "status":              "completed",
+        "scores":              output,
         "temperament_scores":  output,
+        "eq_scores":           output if is_eq else None,
         "emotion_assessments": emotion_payload,
         "study_summary":       narrative_payload.get("narrative"),
         "narrative":           narrative_payload.get("narrative"),

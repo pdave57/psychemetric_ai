@@ -9,6 +9,7 @@ remain attributable to the algorithm that produced them.
 from collections import defaultdict
 
 DIMENSIONS = ("sanguine", "choleric", "melancholic", "phlegmatic")
+EQ_DIMENSIONS = ("self_awareness", "self_regulation", "intrinsic_motivation", "empathy", "social_skills")
 
 SCORING_VERSION = "provisional-0.2.0"
 
@@ -84,6 +85,82 @@ def calculate_temperament_scores(questions, responses):
 
     result = {}
     for d in DIMENSIONS:
+        if not weights[d]:
+            result[d] = None
+            continue
+        mean = totals[d] / weights[d]
+        result[d] = {
+            "raw_mean":         round(mean, 2),
+            "normalized_score": round((mean - 1) / 4 * 100, 1),
+            "n_items":          counts[d],
+            "n_areas":          len(areas[d]),
+        }
+    return result
+
+
+def calculate_eq_scores(questions, responses):
+    """Return a dict mapping each EQ dimension to its score dict (or None).
+
+    ``questions``  — list of Question ORM objects (or SimpleNamespace in tests).
+    ``responses``  — list of UserResponse ORM objects (or SimpleNamespace).
+
+    Returns:
+        {
+            "self_awareness":        {"raw_mean": 3.8, "normalized_score": 70.0, "n_items": 5, "n_areas": 1},
+            "self_regulation":       {"raw_mean": 3.2, "normalized_score": 55.0, "n_items": 5, "n_areas": 1},
+            "intrinsic_motivation": {"raw_mean": 4.0, "normalized_score": 75.0, "n_items": 5, "n_areas": 1},
+            "empathy":              {"raw_mean": 4.2, "normalized_score": 80.0, "n_items": 5, "n_areas": 1},
+            "social_skills":        {"raw_mean": 3.6, "normalized_score": 65.0, "n_items": 5, "n_areas": 1},
+        }
+    """
+    def _value(r):
+        return getattr(r, "likert_value", None) or getattr(r, "raw_value", None)
+
+    response_map = {r.question_id: _value(r) for r in responses}
+    totals  = defaultdict(float)
+    weights = defaultdict(float)
+    counts  = defaultdict(int)
+    areas   = defaultdict(set)
+
+    for q in questions:
+        loads = getattr(q, "loads", None)
+        if loads:
+            for dimension, load in loads.items():
+                if dimension not in EQ_DIMENSIONS:
+                    continue
+                if q.id not in response_map:
+                    continue
+                x = response_map[q.id]
+                if x is None:
+                    continue
+                reverse = getattr(q, "reverse_coded", False) or getattr(q, "reverse_scored", False)
+                if reverse:
+                    x = 6 - x
+                w = float(load) * float(getattr(q, "weight", 1.0) or 1.0)
+                totals[dimension]  += x * w
+                weights[dimension] += w
+                counts[dimension]  += 1
+                areas[dimension].add(getattr(q, "area", "default"))
+        else:
+            dimension = getattr(q, "dimension", None) or getattr(q, "area", None)
+            if dimension not in EQ_DIMENSIONS:
+                continue
+            if q.id not in response_map:
+                continue
+            x = response_map[q.id]
+            if x is None:
+                continue
+            reverse = getattr(q, "reverse_scored", False) or getattr(q, "reverse_coded", False)
+            if reverse:
+                x = 6 - x
+            w = float(getattr(q, "weight", 1.0) or 1.0)
+            totals[dimension]  += x * w
+            weights[dimension] += w
+            counts[dimension]  += 1
+            areas[dimension].add(getattr(q, "area", "default"))
+
+    result = {}
+    for d in EQ_DIMENSIONS:
         if not weights[d]:
             result[d] = None
             continue

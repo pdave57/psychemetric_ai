@@ -12,6 +12,7 @@ from app.agents.state import AssessmentGraphState
 
 _KNOWLEDGE_PACK_DIR = Path(__file__).resolve().parents[1] / "knowledge_pack"
 _TEMPERAMENT_FILE = _KNOWLEDGE_PACK_DIR / "temperament_bank.json"
+_EQ_FILE = _KNOWLEDGE_PACK_DIR / "emotional_intelligence_bank.json"
 
 _DEFAULT_OPTIONS = [
     {"code": "1", "text": "Strongly disagree"},
@@ -22,11 +23,12 @@ _DEFAULT_OPTIONS = [
 ]
 
 
-def load_canonical_questions() -> List[Dict[str, Any]]:
-    """Load canonical 40-item temperament questions from the knowledge pack."""
-    if _TEMPERAMENT_FILE.exists():
+def load_canonical_questions(instrument_code: str = "psychemetre_temperament_40") -> List[Dict[str, Any]]:
+    """Load canonical questions from the knowledge pack for the specified instrument."""
+    target_file = _EQ_FILE if instrument_code == "psychemetre_eq_25" else _TEMPERAMENT_FILE
+    if target_file.exists():
         try:
-            with open(_TEMPERAMENT_FILE, "r", encoding="utf-8") as f:
+            with open(target_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 return data.get("questions", [])
         except Exception:
@@ -71,7 +73,8 @@ def get_next_question(state: AssessmentGraphState) -> Optional[Dict[str, Any]]:
         }
 
     # 2. Fallback to canonical bank
-    canonical = load_canonical_questions()
+    instrument_code = state.get("instrument_code", "psychemetre_temperament_40")
+    canonical = load_canonical_questions(instrument_code)
     if canonical and idx < len(canonical):
         cq = canonical[idx]
         return {

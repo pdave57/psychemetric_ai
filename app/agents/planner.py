@@ -12,13 +12,22 @@ from app.agents.state import AssessmentGraphState
 def create_assessment_plan(
     total_questions: int = 16,
     target_dimensions: Optional[List[str]] = None,
+    instrument_code: str = "psychemetre_temperament_40",
 ) -> Dict[str, Any]:
     """Generate a structured assessment plan with stages and coverage targets."""
-    dims = target_dimensions or ["sanguine", "choleric", "melancholic", "phlegmatic"]
+    if target_dimensions is None:
+        if instrument_code == "psychemetre_eq_25":
+            dims = ["self_awareness", "self_regulation", "intrinsic_motivation", "empathy", "social_skills"]
+        else:
+            dims = ["sanguine", "choleric", "melancholic", "phlegmatic"]
+    else:
+        dims = target_dimensions
+
+    items_per_dim = total_questions // len(dims) if dims else 0
     return {
         "target_dimensions": dims,
         "total_items": total_questions,
-        "items_per_dimension": total_questions // len(dims),
+        "items_per_dimension": items_per_dim,
         "stages": ["questioning", "evaluating_response", "scoring", "narrative", "completed"],
         "current_stage": "questioning",
         "adaptive_inquiry": False,
@@ -36,8 +45,12 @@ def planner_node(state: AssessmentGraphState) -> Dict[str, Any]:
     answers = state.get("answers", [])
     total = state.get("total_questions", 16)
     answered_count = len(answers)
+    instrument_code = state.get("instrument_code", "psychemetre_temperament_40")
 
-    plan = state.get("plan") or create_assessment_plan(total_questions=total)
+    plan = state.get("plan") or create_assessment_plan(
+        total_questions=total,
+        instrument_code=instrument_code,
+    )
 
     # If all items answered, transition to scoring
     if answered_count >= total:

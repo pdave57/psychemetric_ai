@@ -39,6 +39,7 @@ class AssessmentGraphState(TypedDict, total=False):
 
     # 6. Scoring, RAG & Narrative (managed by report_agent.py)
     temperament_scores: Optional[Dict[str, Any]]
+    eq_scores: Optional[Dict[str, Any]]
     leading_tendencies: Optional[List[str]]
     rag_citations: Optional[List[Dict[str, Any]]]
     narrative_report: Optional[Dict[str, Any]]
@@ -51,9 +52,19 @@ def create_initial_state(
     user_id: str = "guest_user",
     instrument_code: str = "psychemetre_temperament_40",
     instrument_version: str = "1.0.0",
-    total_questions: int = 16,
+    total_questions: Optional[int] = None,
 ) -> AssessmentGraphState:
     """Create a pristine, well-structured initial state for assessment orchestration."""
+    is_eq = instrument_code == "psychemetre_eq_25"
+    if total_questions is None:
+        total_questions = 25 if is_eq else 16
+
+    target_dimensions = (
+        ["self_awareness", "self_regulation", "intrinsic_motivation", "empathy", "social_skills"]
+        if is_eq
+        else ["sanguine", "choleric", "melancholic", "phlegmatic"]
+    )
+
     return {
         "session_id": session_id,
         "user_id": user_id,
@@ -76,13 +87,14 @@ def create_initial_state(
         "safety_message": None,
         "verified_resources": None,
         "temperament_scores": None,
+        "eq_scores": None,
         "leading_tendencies": None,
         "rag_citations": None,
         "narrative_report": None,
         "recommendations": None,
         "report_id": None,
         "plan": {
-            "target_dimensions": ["sanguine", "choleric", "melancholic", "phlegmatic"],
+            "target_dimensions": target_dimensions,
             "stages": ["questioning", "scoring", "narrative", "completed"],
             "current_stage": "questioning",
         },
