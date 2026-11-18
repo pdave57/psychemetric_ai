@@ -27,8 +27,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = getAuthToken();
+    const token = getAuthToken() || (typeof window !== 'undefined' ? localStorage.getItem('agentbleu_token') : null);
     if (token) {
+      setAuthToken(token);
       authStatus()
         .then(() => {
           setUser({ user_id: token });

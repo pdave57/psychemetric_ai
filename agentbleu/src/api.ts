@@ -200,11 +200,26 @@ export class ApiError extends Error {
 /* Client                                                             */
 /* ------------------------------------------------------------------ */
 
-let authToken: string | null = null;
+export function buildUrl(path: string): string {
+  if (path.startsWith('http')) return path;
+  const base = (API_BASE || '').trim().replace(/\/+$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return base ? `${base}${cleanPath}` : cleanPath;
+}
+
+let authToken: string | null =
+  typeof window !== 'undefined' ? localStorage.getItem('agentbleu_token') : null;
 
 /** Set the bearer token used for authenticated requests. */
 export function setAuthToken(token: string | null): void {
   authToken = token;
+  if (typeof window !== 'undefined') {
+    if (token) {
+      localStorage.setItem('agentbleu_token', token);
+    } else {
+      localStorage.removeItem('agentbleu_token');
+    }
+  }
 }
 
 /** Get the current bearer token. */
@@ -216,7 +231,7 @@ async function request<T>(
   input: string,
   init: RequestInit = {},
 ): Promise<T> {
-  const url = input.startsWith('http') ? input : `${API_BASE}${input}`;
+  const url = buildUrl(input);
   const headers: Record<string, string> = {};
 
   if (init.body && !(init.body instanceof FormData)) {
@@ -392,7 +407,7 @@ export function streamQuestions(
   (async () => {
     try {
       const res = await fetch(
-        `${API_BASE}/api/v1/questions/sessions/${sessionId}/stream`,
+        buildUrl(`/api/v1/questions/sessions/${sessionId}/stream`),
         {
           headers: {
             Accept: 'text/event-stream, application/x-ndjson',
@@ -584,7 +599,7 @@ export function streamAgentEvents(
   (async () => {
     try {
       const res = await fetch(
-        `${API_BASE}/api/v1/agents/stream/${sessionId}`,
+        buildUrl(`/api/v1/agents/stream/${sessionId}`),
         {
           headers: {
             Accept: 'text/event-stream, application/x-ndjson',
