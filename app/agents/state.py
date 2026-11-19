@@ -55,9 +55,11 @@ def create_initial_state(
     total_questions: Optional[int] = None,
 ) -> AssessmentGraphState:
     """Create a pristine, well-structured initial state for assessment orchestration."""
-    is_eq = instrument_code == "psychemetre_eq_25"
+    is_eq = instrument_code in ("psychemetre_eq_15", "psychemetre_eq_25")
     if total_questions is None:
-        if is_eq:
+        if instrument_code == "psychemetre_eq_15":
+            total_questions = 15
+        elif instrument_code == "psychemetre_eq_25":
             total_questions = 25
         elif instrument_code == "psychemetre_temperament_40":
             total_questions = 40

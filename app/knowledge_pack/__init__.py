@@ -32,7 +32,13 @@ def get_temperament_40_bank() -> Dict[str, Any]:
     return load_json("temperament_40_bank.json")
 
 def get_emotional_intelligence_bank() -> Dict[str, Any]:
-    return load_json("emotional_intelligence_bank.json")
+    return load_json("emotional_intelligence_15_bank.json")
+
+def get_emotional_intelligence_15_bank() -> Dict[str, Any]:
+    return load_json("emotional_intelligence_15_bank.json")
+
+def get_emotional_intelligence_25_bank() -> Dict[str, Any]:
+    return load_json("emotional_intelligence_25_bank.json")
 
 def get_emotion_indicators_bank() -> Dict[str, Any]:
     return load_json("emotion_indicators_bank.json")

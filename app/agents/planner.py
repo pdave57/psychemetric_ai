@@ -16,7 +16,7 @@ def create_assessment_plan(
 ) -> Dict[str, Any]:
     """Generate a structured assessment plan with stages and coverage targets."""
     if target_dimensions is None:
-        if instrument_code == "psychemetre_eq_25":
+        if instrument_code in ("psychemetre_eq_15", "psychemetre_eq_25"):
             dims = ["self_awareness", "self_regulation", "intrinsic_motivation", "empathy", "social_skills"]
         else:
             dims = ["sanguine", "choleric", "melancholic", "phlegmatic"]

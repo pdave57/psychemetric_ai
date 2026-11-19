@@ -33,9 +33,26 @@
       ]
     },
     "emotional_intelligence": {
+      "code": "psychemetre_eq_15",
+      "scale_min": 1,
+      "scale_max": 5,
+      "total_items": 15,
+      "items_per_dimension": 3,
+      "minimum_answers_per_dimension": 2,
+      "formula": "normalized_score = round(((raw_mean - 1) / (scale_max - 1)) * 100, 1)",
+      "reverse_score_formula": "corrected_value = (scale_min + scale_max) - raw_value",
+      "bands": [
+        {"name": "Developing", "range": [0.0, 49.9], "interpretation": "Opportunity for intentional practice and growth in this emotional competency."},
+        {"name": "Proficient", "range": [50.0, 74.9], "interpretation": "Solid, dependable emotional skill applied consistently in routine situations."},
+        {"name": "Strong", "range": [75.0, 100.0], "interpretation": "Highly developed emotional capability that serves as an anchor under stress."}
+      ]
+    },
+    "emotional_intelligence_25": {
       "code": "psychemetre_eq_25",
       "scale_min": 1,
       "scale_max": 5,
+      "total_items": 25,
+      "items_per_dimension": 5,
       "minimum_answers_per_dimension": 3,
       "formula": "normalized_score = round(((raw_mean - 1) / (scale_max - 1)) * 100, 1)",
       "reverse_score_formula": "corrected_value = (scale_min + scale_max) - raw_value",

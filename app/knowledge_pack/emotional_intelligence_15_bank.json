@@ -1,0 +1,158 @@
+{
+  "instrument_code": "psychemetre_eq_15",
+  "version": "1.0.0",
+  "title": "PsychemetreAI 15-Item Emotional Self-Assessment (Emotional Skills)",
+  "framework": "Goleman-Salovey-Mayer Emotional Intelligence Competencies",
+  "construct": "emotional_skills",
+  "scale": "likert_5_agreement",
+  "dimensions": [
+    "self_awareness",
+    "self_regulation",
+    "intrinsic_motivation",
+    "empathy",
+    "social_skills"
+  ],
+  "total_items": 15,
+  "items_per_dimension": 3,
+  "questions": [
+    {
+      "code": "EQ15_SA01",
+      "dimension": "self_awareness",
+      "text": "I can accurately identify my emotions as they occur throughout the day.",
+      "area": "emotional_recognition",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 1
+    },
+    {
+      "code": "EQ15_SA02",
+      "dimension": "self_awareness",
+      "text": "I understand the specific triggers that cause me to feel irritated, anxious, or joyful.",
+      "area": "trigger_awareness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 2
+    },
+    {
+      "code": "EQ15_SA03",
+      "dimension": "self_awareness",
+      "text": "I have an honest understanding of both my personal strengths and emotional blind spots.",
+      "area": "self_insight",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 3
+    },
+
+    {
+      "code": "EQ15_SR01",
+      "dimension": "self_regulation",
+      "text": "When provoked, I can pause and choose a deliberate response rather than reacting impulsively.",
+      "area": "impulse_control",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 4
+    },
+    {
+      "code": "EQ15_SR02",
+      "dimension": "self_regulation",
+      "text": "I adapt smoothly when circumstances require altering established routines or plans.",
+      "area": "adaptability",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 5
+    },
+    {
+      "code": "EQ15_SR03",
+      "dimension": "self_regulation",
+      "text": "I can sustain composure and clear thinking under demanding deadline pressure.",
+      "area": "stress_tolerance",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 6
+    },
+
+    {
+      "code": "EQ15_MO01",
+      "dimension": "intrinsic_motivation",
+      "text": "I stay dedicated to meaningful goals even when immediate external rewards are absent.",
+      "area": "goal_persistence",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 7
+    },
+    {
+      "code": "EQ15_MO02",
+      "dimension": "intrinsic_motivation",
+      "text": "I view failures and mistakes as constructive opportunities for learning and mastery.",
+      "area": "growth_mindset",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 8
+    },
+    {
+      "code": "EQ15_MO03",
+      "dimension": "intrinsic_motivation",
+      "text": "I maintain an optimistic, solutions-oriented focus when tackling complex problems.",
+      "area": "resilience_optimism",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 9
+    },
+
+    {
+      "code": "EQ15_EM01",
+      "dimension": "empathy",
+      "text": "I easily sense what another person is feeling from their tone of voice and body language.",
+      "area": "affective_perception",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 10
+    },
+    {
+      "code": "EQ15_EM02",
+      "dimension": "empathy",
+      "text": "I listen attentively to understand others' perspectives, even when I disagree with them.",
+      "area": "perspective_taking",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 11
+    },
+    {
+      "code": "EQ15_EM03",
+      "dimension": "empathy",
+      "text": "I anticipate how my words or actions might impact the emotional state of people around me.",
+      "area": "social_awareness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 12
+    },
+
+    {
+      "code": "EQ15_SS01",
+      "dimension": "social_skills",
+      "text": "I navigate interpersonal disagreements productively by seeking collaborative solutions.",
+      "area": "conflict_resolution",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 13
+    },
+    {
+      "code": "EQ15_SS02",
+      "dimension": "social_skills",
+      "text": "I communicate clearly and build rapport effectively with diverse individuals.",
+      "area": "rapport_building",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 14
+    },
+    {
+      "code": "EQ15_SS03",
+      "dimension": "social_skills",
+      "text": "I actively foster teamwork, cooperation, and positive group morale.",
+      "area": "team_collaboration",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 15
+    }
+  ]
+}

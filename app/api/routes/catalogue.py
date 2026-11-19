@@ -11,6 +11,8 @@ from app.knowledge_pack import (
     get_temperament_20_bank,
     get_temperament_40_bank,
     get_emotional_intelligence_bank,
+    get_emotional_intelligence_15_bank,
+    get_emotional_intelligence_25_bank,
     get_emotion_indicators_bank,
     get_answer_options,
 )
@@ -62,8 +64,20 @@ def get_temperament_40_catalog():
 
 @router.get("/knowledge-pack/emotional-intelligence")
 def get_eq_catalog():
-    """Retrieve the standard 25-item emotional intelligence competency bank."""
+    """Retrieve the standard 15-item emotional intelligence competency bank."""
     return get_emotional_intelligence_bank()
+
+
+@router.get("/knowledge-pack/emotional-intelligence-15")
+def get_eq_15_catalog():
+    """Retrieve the 15-item emotional self-assessment bank (emotional skills)."""
+    return get_emotional_intelligence_15_bank()
+
+
+@router.get("/knowledge-pack/emotional-intelligence-25")
+def get_eq_25_catalog():
+    """Retrieve the 25-item emotional intelligence competency bank (historical)."""
+    return get_emotional_intelligence_25_bank()
 
 
 @router.get("/knowledge-pack/emotions")

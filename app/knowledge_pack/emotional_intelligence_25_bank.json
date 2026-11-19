@@ -1,0 +1,222 @@
+{
+  "instrument_code": "psychemetre_eq_25",
+  "version": "1.0.0",
+  "title": "PsychemetreAI 25-Item Emotional Intelligence Inventory",
+  "framework": "Goleman-Salovey-Mayer Emotional Intelligence Competencies",
+  "scale": "likert_5_agreement",
+  "dimensions": [
+    "self_awareness",
+    "self_regulation",
+    "intrinsic_motivation",
+    "empathy",
+    "social_skills"
+  ],
+  "total_items": 25,
+  "items_per_dimension": 5,
+  "questions": [
+    {
+      "code": "EQ_SA01",
+      "dimension": "self_awareness",
+      "text": "I can accurately identify my emotions as they occur throughout the day.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 1
+    },
+    {
+      "code": "EQ_SA02",
+      "dimension": "self_awareness",
+      "text": "I understand the specific triggers that cause me to feel irritated, anxious, or joyful.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 2
+    },
+    {
+      "code": "EQ_SA03",
+      "dimension": "self_awareness",
+      "text": "I often find myself reacting strongly without realizing what emotion is driving my behavior.",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 3
+    },
+    {
+      "code": "EQ_SA04",
+      "dimension": "self_awareness",
+      "text": "I have an honest understanding of both my personal strengths and emotional blind spots.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 4
+    },
+    {
+      "code": "EQ_SA05",
+      "dimension": "self_awareness",
+      "text": "I notice physical sensations (e.g. muscle tension, heart rate) that signal emerging feelings.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 5
+    },
+
+    {
+      "code": "EQ_SR01",
+      "dimension": "self_regulation",
+      "text": "When provoked, I can pause and choose a deliberate response rather than reacting impulsively.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 6
+    },
+    {
+      "code": "EQ_SR02",
+      "dimension": "self_regulation",
+      "text": "I adapt smoothly when circumstances require altering established routines or plans.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 7
+    },
+    {
+      "code": "EQ_SR03",
+      "dimension": "self_regulation",
+      "text": "I struggle to calm myself down once I become angry or emotionally distressed.",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 8
+    },
+    {
+      "code": "EQ_SR04",
+      "dimension": "self_regulation",
+      "text": "I can sustain composure and clear thinking under demanding deadline pressure.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 9
+    },
+    {
+      "code": "EQ_SR05",
+      "dimension": "self_regulation",
+      "text": "I take responsibility for my emotional reactions instead of projecting blame onto others.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 10
+    },
+
+    {
+      "code": "EQ_MO01",
+      "dimension": "intrinsic_motivation",
+      "text": "I stay dedicated to meaningful goals even when immediate external rewards are absent.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 11
+    },
+    {
+      "code": "EQ_MO02",
+      "dimension": "intrinsic_motivation",
+      "text": "I view failures and mistakes as constructive opportunities for learning and mastery.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 12
+    },
+    {
+      "code": "EQ_MO03",
+      "dimension": "intrinsic_motivation",
+      "text": "I easily lose drive and abandon initiatives when encountering initial resistance.",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 13
+    },
+    {
+      "code": "EQ_MO04",
+      "dimension": "intrinsic_motivation",
+      "text": "I proactively take initiative to improve situations without waiting to be prompted.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 14
+    },
+    {
+      "code": "EQ_MO05",
+      "dimension": "intrinsic_motivation",
+      "text": "I maintain an optimistic, solutions-oriented focus when tackling complex problems.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 15
+    },
+
+    {
+      "code": "EQ_EM01",
+      "dimension": "empathy",
+      "text": "I easily sense what another person is feeling from their tone of voice and body language.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 16
+    },
+    {
+      "code": "EQ_EM02",
+      "dimension": "empathy",
+      "text": "I listen attentively to understand others' perspectives, even when I disagree with them.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 17
+    },
+    {
+      "code": "EQ_EM03",
+      "dimension": "empathy",
+      "text": "I often find it difficult to appreciate why people react emotionally to certain situations.",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 18
+    },
+    {
+      "code": "EQ_EM04",
+      "dimension": "empathy",
+      "text": "I anticipate how my words or actions might impact the emotional state of people around me.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 19
+    },
+    {
+      "code": "EQ_EM05",
+      "dimension": "empathy",
+      "text": "I show genuine sensitivity when someone shares a personal struggle with me.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 20
+    },
+
+    {
+      "code": "EQ_SS01",
+      "dimension": "social_skills",
+      "text": "I navigate interpersonal disagreements productively by seeking collaborative solutions.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 21
+    },
+    {
+      "code": "EQ_SS02",
+      "dimension": "social_skills",
+      "text": "I communicate clearly and build rapport effectively with diverse individuals.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 22
+    },
+    {
+      "code": "EQ_SS03",
+      "dimension": "social_skills",
+      "text": "I feel awkward or ineffective when attempting to lead or influence group discussions.",
+      "reverse_coded": true,
+      "weight": 1.0,
+      "sort_order": 23
+    },
+    {
+      "code": "EQ_SS04",
+      "dimension": "social_skills",
+      "text": "I actively foster teamwork, cooperation, and positive group morale.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 24
+    },
+    {
+      "code": "EQ_SS05",
+      "dimension": "social_skills",
+      "text": "I can deliver constructive feedback in a supportive, respectful manner.",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 25
+    }
+  ]
+}

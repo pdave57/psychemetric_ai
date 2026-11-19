@@ -218,7 +218,7 @@ def complete_assessment(db: Session, session_id):
         )
 
     # Map responses to the format expected by scoring_service.
-    is_eq = bool(instrument and instrument.instrument == "psychemetre_eq_25")
+    is_eq = bool(instrument and instrument.instrument in ("psychemetre_eq_15", "psychemetre_eq_25"))
     if is_eq:
         values = calculate_eq_scores(qs, rs)
         dimension_list = EQ_DIMENSIONS

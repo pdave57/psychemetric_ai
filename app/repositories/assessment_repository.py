@@ -26,6 +26,8 @@ from app.knowledge_pack import (
     get_temperament_20_bank,
     get_temperament_40_bank,
     get_emotional_intelligence_bank,
+    get_emotional_intelligence_15_bank,
+    get_emotional_intelligence_25_bank,
     get_answer_options,
 )
 
@@ -35,6 +37,9 @@ TEMPERAMENT_20_VERSION = "1.0.0"
 
 TEMPERAMENT_40_CODE = "psychemetre_temperament_40"
 TEMPERAMENT_40_VERSION = "1.0.0"
+
+EQ_15_CODE = "psychemetre_eq_15"
+EQ_15_VERSION = "1.0.0"
 
 EQ_25_CODE = "psychemetre_eq_25"
 EQ_25_VERSION = "1.0.0"
@@ -160,6 +165,64 @@ def seed_instrument_from_knowledge_pack(
     return instrument
 
 
+def seed_eq_15_instrument(
+    db: Session,
+    instrument_code: str = EQ_15_CODE,
+    version: str = EQ_15_VERSION
+) -> AssessmentVersion:
+    """Seed the 15-item emotional self-assessment instrument from knowledge_pack."""
+    existing = db.scalar(
+        select(AssessmentVersion).where(
+            AssessmentVersion.instrument == instrument_code,
+            AssessmentVersion.version == version,
+        )
+    )
+    if existing:
+        return existing
+
+    bank = get_emotional_intelligence_15_bank()
+    options_data = get_answer_options()["scales"]["likert_5_agreement"]["options"]
+
+    instrument = AssessmentVersion(
+        instrument=instrument_code,
+        version=version,
+        status="published",
+        config={"scale_min": 1, "scale_max": 5, "total_items": 15},
+        content_sha256="psychemetre_eq_15_v1",
+    )
+    db.add(instrument)
+    db.flush()
+
+    for q_data in bank["questions"]:
+        q = Question(
+            version_id=instrument.id,
+            code=q_data["code"],
+            text=q_data["text"],
+            area=q_data.get("area", q_data.get("dimension", "general")),
+            kind=ItemKind.likert,
+            weight=Decimal(str(q_data.get("weight", 1.0))),
+            is_core=True,
+            reverse_coded=q_data.get("reverse_coded", False),
+            loads={q_data["dimension"]: 1.0},
+            sort_order=q_data["sort_order"],
+        )
+        db.add(q)
+        db.flush()
+
+        db.add_all([
+            QuestionOption(
+                question_id=q.id,
+                code=opt["code"],
+                text=opt["label"],
+                evidence={},
+            )
+            for opt in options_data
+        ])
+
+    db.commit()
+    return instrument
+
+
 def seed_eq_instrument(
     db: Session,
     instrument_code: str = EQ_25_CODE,
@@ -175,7 +238,7 @@ def seed_eq_instrument(
     if existing:
         return existing
 
-    bank = get_emotional_intelligence_bank()
+    bank = get_emotional_intelligence_25_bank()
     options_data = get_answer_options()["scales"]["likert_5_agreement"]["options"]
 
     instrument = AssessmentVersion(
@@ -233,7 +296,8 @@ def seed_initial_instrument(db: Session) -> AssessmentVersion:
     # 2. 40-item historical instrument
     canonical_inst = seed_instrument_from_knowledge_pack(db, TEMPERAMENT_40_CODE, TEMPERAMENT_40_VERSION)
 
-    # 3. 25-item EQ instrument
+    # 3. 15-item and 25-item EQ instruments
+    seed_eq_15_instrument(db, EQ_15_CODE, EQ_15_VERSION)
     seed_eq_instrument(db, EQ_25_CODE, EQ_25_VERSION)
 
     # 4. Seed legacy 16-item alias pointing to first 16 items for backward compat
@@ -435,6 +499,40 @@ def verify_temperament_20_migration(db: Session) -> Dict[str, Any]:
     }
 
 
+def verify_eq_15_migration(db: Session) -> Dict[str, Any]:
+    """Verify 15-item EQ instrument migration status and return summary statistics."""
+    eq_version = db.scalar(
+        select(AssessmentVersion).where(
+            AssessmentVersion.instrument == EQ_15_CODE,
+            AssessmentVersion.version == EQ_15_VERSION,
+        )
+    )
+    if not eq_version:
+        return {"migrated": False, "reason": "AssessmentVersion record missing"}
+
+    questions = get_questions(db, eq_version.id)
+    options_count = db.scalar(
+        select(func.count(QuestionOption.id))
+        .join(Question, QuestionOption.question_id == Question.id)
+        .where(Question.version_id == eq_version.id)
+    ) or 0
+
+    dimension_counts = defaultdict(int)
+    for q in questions:
+        dim = list(q.loads.keys())[0] if q.loads else (q.area or "unknown")
+        dimension_counts[dim] += 1
+
+    return {
+        "migrated": len(questions) == 15,
+        "instrument_code": eq_version.instrument,
+        "version": eq_version.version,
+        "total_questions": len(questions),
+        "total_options": options_count,
+        "dimension_counts": dict(dimension_counts),
+        "status": eq_version.status,
+    }
+
+
 def verify_eq_migration(db: Session) -> Dict[str, Any]:
     """Verify EQ instrument migration status and return summary statistics."""
     eq_version = db.scalar(
@@ -477,6 +575,8 @@ if __name__ == "__main__":
         seed_initial_instrument(session)
         t20_stats = verify_temperament_20_migration(session)
         print("Temperament-20 Migration Status:", t20_stats)
+        eq15_stats = verify_eq_15_migration(session)
+        print("EQ-15 Migration Status:", eq15_stats)
         eq_stats = verify_eq_migration(session)
-        print("EQ Migration Status:", eq_stats)
+        print("EQ-25 Migration Status:", eq_stats)
 

@@ -39,7 +39,7 @@ def report_agent_scoring_node(state: AssessmentGraphState) -> Dict[str, Any]:
     ]
 
     instrument_code = state.get("instrument_code", "psychemetre_temperament_20")
-    is_eq = instrument_code == "psychemetre_eq_25"
+    is_eq = instrument_code in ("psychemetre_eq_15", "psychemetre_eq_25")
 
     if is_eq:
         scores_dict = calculate_eq_scores(questions, responses)
@@ -84,7 +84,7 @@ def report_agent_narrative_node(state: AssessmentGraphState) -> Dict[str, Any]:
     """Narrative synthesis node: generates reflective narrative with numeric validation."""
     scores_data = (
         state.get("eq_scores", {}).get("dimensions", [])
-        if state.get("instrument_code") == "psychemetre_eq_25"
+        if state.get("instrument_code") in ("psychemetre_eq_15", "psychemetre_eq_25")
         else state.get("temperament_scores", {}).get("dimensions", [])
     ) or state.get("temperament_scores", {}).get("dimensions", [])
     user_id = state.get("user_id", "demo")
