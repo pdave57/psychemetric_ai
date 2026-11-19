@@ -12,6 +12,7 @@ from app.agents.state import AssessmentGraphState
 
 _KNOWLEDGE_PACK_DIR = Path(__file__).resolve().parents[1] / "knowledge_pack"
 _TEMPERAMENT_FILE = _KNOWLEDGE_PACK_DIR / "temperament_bank.json"
+_TEMPERAMENT_40_FILE = _KNOWLEDGE_PACK_DIR / "temperament_40_bank.json"
 _EQ_FILE = _KNOWLEDGE_PACK_DIR / "emotional_intelligence_bank.json"
 
 _DEFAULT_OPTIONS = [
@@ -23,9 +24,15 @@ _DEFAULT_OPTIONS = [
 ]
 
 
-def load_canonical_questions(instrument_code: str = "psychemetre_temperament_40") -> List[Dict[str, Any]]:
+def load_canonical_questions(instrument_code: str = "psychemetre_temperament_20") -> List[Dict[str, Any]]:
     """Load canonical questions from the knowledge pack for the specified instrument."""
-    target_file = _EQ_FILE if instrument_code == "psychemetre_eq_25" else _TEMPERAMENT_FILE
+    if instrument_code == "psychemetre_eq_25":
+        target_file = _EQ_FILE
+    elif instrument_code == "psychemetre_temperament_40":
+        target_file = _TEMPERAMENT_40_FILE if _TEMPERAMENT_40_FILE.exists() else _TEMPERAMENT_FILE
+    else:
+        target_file = _TEMPERAMENT_FILE
+
     if target_file.exists():
         try:
             with open(target_file, "r", encoding="utf-8") as f:
@@ -73,7 +80,7 @@ def get_next_question(state: AssessmentGraphState) -> Optional[Dict[str, Any]]:
         }
 
     # 2. Fallback to canonical bank
-    instrument_code = state.get("instrument_code", "psychemetre_temperament_40")
+    instrument_code = state.get("instrument_code", "psychemetre_temperament_20")
     canonical = load_canonical_questions(instrument_code)
     if canonical and idx < len(canonical):
         cq = canonical[idx]

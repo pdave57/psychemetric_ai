@@ -7,11 +7,13 @@ from typing import Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.agents.graph import build_assessment_graph
-from app.models.session import AssessmentSession
+from app.models.session import AssessmentSession, UserResponse
+from app.models.instrument import Question
 from app.models.enums import SessionStatus
 
 router = APIRouter()
@@ -38,6 +40,25 @@ def run_agent_step(payload: AgentStepRequest, db: Session = Depends(get_db)):
     answers = []
     if current_state and current_state.values:
         answers = list(current_state.values.get("answers", []))
+
+    # Seamless resumption: if in-memory answers empty, recover from database
+    if not answers:
+        try:
+            session_uuid = uuid.UUID(payload.session_id)
+            db_responses = db.scalars(
+                select(UserResponse).where(UserResponse.session_id == session_uuid).order_by(UserResponse.seq)
+            ).all()
+            for r in db_responses:
+                q = db.get(Question, r.question_id)
+                dim = list(q.loads.keys())[0] if q and q.loads else (q.area if q else "sanguine")
+                answers.append({
+                    "question_id": str(r.question_id),
+                    "value": r.likert_value,
+                    "dimension": dim,
+                    "area": q.area if q else "general",
+                })
+        except Exception:
+            pass
 
     if payload.answer_value is not None or payload.free_text:
         answers.append({

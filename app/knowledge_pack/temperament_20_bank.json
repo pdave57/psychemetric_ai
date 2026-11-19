@@ -1,0 +1,198 @@
+{
+  "instrument_code": "psychemetre_temperament_20",
+  "version": "1.0.0",
+  "title": "PsychemetreAI 20-Item Classical Temperament Inventory",
+  "framework": "Four Classical Reflective Temperaments",
+  "scale": "likert_5_agreement",
+  "dimensions": ["sanguine", "choleric", "melancholic", "phlegmatic"],
+  "total_items": 20,
+  "items_per_dimension": 5,
+  "behavioural_areas": {
+    "sanguine": ["sociability", "enthusiasm", "expressiveness", "optimism", "spontaneity"],
+    "choleric": ["assertiveness", "leadership", "decisiveness", "competitiveness", "goal_orientation"],
+    "melancholic": ["attention_to_detail", "reflection", "planning", "sensitivity", "perfectionism"],
+    "phlegmatic": ["patience", "emotional_steadiness", "cooperation", "conflict_avoidance", "consistency"]
+  },
+  "questions": [
+    {
+      "code": "SAN01",
+      "dimension": "sanguine",
+      "text": "I enjoy meeting new people and starting conversations.",
+      "area": "sociability",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 1
+    },
+    {
+      "code": "SAN02",
+      "dimension": "sanguine",
+      "text": "I become enthusiastic when participating in group activities.",
+      "area": "enthusiasm",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 2
+    },
+    {
+      "code": "SAN03",
+      "dimension": "sanguine",
+      "text": "I openly express my feelings and excitement.",
+      "area": "expressiveness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 3
+    },
+    {
+      "code": "SAN04",
+      "dimension": "sanguine",
+      "text": "I usually look for the positive side of difficult situations.",
+      "area": "optimism",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 4
+    },
+    {
+      "code": "SAN05",
+      "dimension": "sanguine",
+      "text": "I enjoy spontaneous activities more than carefully planned ones.",
+      "area": "spontaneity",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 5
+    },
+    {
+      "code": "CHO01",
+      "dimension": "choleric",
+      "text": "I naturally take the lead when working with others.",
+      "area": "leadership",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 6
+    },
+    {
+      "code": "CHO02",
+      "dimension": "choleric",
+      "text": "I make decisions quickly when faced with challenges.",
+      "area": "decisiveness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 7
+    },
+    {
+      "code": "CHO03",
+      "dimension": "choleric",
+      "text": "I am strongly motivated by achieving goals.",
+      "area": "goal_orientation",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 8
+    },
+    {
+      "code": "CHO04",
+      "dimension": "choleric",
+      "text": "I become frustrated when people unnecessarily delay progress.",
+      "area": "competitiveness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 9
+    },
+    {
+      "code": "CHO05",
+      "dimension": "choleric",
+      "text": "I enjoy situations where I can take responsibility.",
+      "area": "assertiveness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 10
+    },
+    {
+      "code": "MEL01",
+      "dimension": "melancholic",
+      "text": "I pay close attention to details before completing tasks.",
+      "area": "attention_to_detail",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 11
+    },
+    {
+      "code": "MEL02",
+      "dimension": "melancholic",
+      "text": "I prefer thinking carefully before making important decisions.",
+      "area": "reflection",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 12
+    },
+    {
+      "code": "MEL03",
+      "dimension": "melancholic",
+      "text": "I often plan activities before carrying them out.",
+      "area": "planning",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 13
+    },
+    {
+      "code": "MEL04",
+      "dimension": "melancholic",
+      "text": "I am sensitive to criticism of my work.",
+      "area": "sensitivity",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 14
+    },
+    {
+      "code": "MEL05",
+      "dimension": "melancholic",
+      "text": "I prefer doing things correctly rather than rushing to finish.",
+      "area": "perfectionism",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 15
+    },
+    {
+      "code": "PHL01",
+      "dimension": "phlegmatic",
+      "text": "I remain calm when people around me become upset.",
+      "area": "emotional_steadiness",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 16
+    },
+    {
+      "code": "PHL02",
+      "dimension": "phlegmatic",
+      "text": "I prefer resolving disagreements peacefully.",
+      "area": "conflict_avoidance",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 17
+    },
+    {
+      "code": "PHL03",
+      "dimension": "phlegmatic",
+      "text": "I am comfortable working behind the scenes.",
+      "area": "cooperation",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 18
+    },
+    {
+      "code": "PHL04",
+      "dimension": "phlegmatic",
+      "text": "I am patient when dealing with difficult people.",
+      "area": "patience",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 19
+    },
+    {
+      "code": "PHL05",
+      "dimension": "phlegmatic",
+      "text": "I prefer predictable routines to frequent changes.",
+      "area": "consistency",
+      "reverse_coded": false,
+      "weight": 1.0,
+      "sort_order": 20
+    }
+  ]
+}

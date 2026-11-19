@@ -42,11 +42,18 @@ DISCLAIMER = (
 )
 
 
-def start_assessment(db: Session, user_id, code: str, version: str):
-    """Create a new session for *user_id* on the named instrument version.
+def start_assessment(
+    db: Session,
+    user_id,
+    code: str = repo.TEMPERAMENT_20_CODE,
+    version: str = repo.TEMPERAMENT_20_VERSION,
+    resume_if_active: bool = False,
+):
+    """Create or resume an assessment session for *user_id* on the named instrument version.
 
     If *user_id* corresponds to a registered user, validates that active
     consent for `assessment_processing` is recorded.
+    If *resume_if_active* is True, checks for an existing in-progress session.
     Returns (session, questions). Raises 403 if consent missing, 404 if instrument not found.
     """
     # Check consent if user_id resolves to an existing registered user
@@ -71,6 +78,12 @@ def start_assessment(db: Session, user_id, code: str, version: str):
     except (ValueError, TypeError):
         pass
 
+    if resume_if_active:
+        active = repo.get_active_session_for_user(db, user_id, instrument_code=code)
+        if active:
+            questions = repo.get_questions(db, active.version_id)
+            return active, questions
+
     instrument = repo.get_instrument(db, code, version)
     if not instrument:
         raise HTTPException(404, "Instrument version not found")
@@ -78,6 +91,72 @@ def start_assessment(db: Session, user_id, code: str, version: str):
     session   = repo.create_session(db, user_id, instrument)
     questions = repo.get_questions(db, instrument.id)
     return session, questions
+
+
+def get_assessment_progress(db: Session, session_id):
+    """Return the completion progress of a session, including answered items and next question."""
+    s = db.get(repo.AssessmentSession, session_id)
+    if not s:
+        raise HTTPException(404, "Session not found")
+
+    instrument = db.get(AssessmentVersion, s.version_id)
+    questions = repo.get_questions(db, s.version_id)
+    responses = repo.get_responses(db, session_id)
+
+    answered_map = {r.question_id: r.likert_value for r in responses}
+    answered_count = len(answered_map)
+    total_count = len(questions)
+
+    remaining_questions = [q for q in questions if q.id not in answered_map]
+    next_q = remaining_questions[0] if remaining_questions else None
+
+    next_question_payload = None
+    if next_q:
+        options = repo.get_options(db, next_q.id)
+        next_question_payload = {
+            "id": str(next_q.id),
+            "code": next_q.code,
+            "text": next_q.text,
+            "area": next_q.area,
+            "kind": next_q.kind.value if hasattr(next_q.kind, "value") else str(next_q.kind),
+            "reverse_coded": next_q.reverse_coded,
+            "sort_order": next_q.sort_order,
+            "options": [{"code": o.code, "text": o.text} for o in options],
+            "index": answered_count,
+            "total": total_count,
+        }
+
+    progress_pct = round((answered_count / total_count * 100), 1) if total_count > 0 else 0.0
+
+    return {
+        "session_id": s.id,
+        "user_id": str(s.user_id),
+        "status": s.status.value if hasattr(s.status, "value") else str(s.status),
+        "instrument_code": instrument.instrument if instrument else "unknown",
+        "instrument_version": instrument.version if instrument else "unknown",
+        "total_questions": total_count,
+        "answered_count": answered_count,
+        "remaining_count": len(remaining_questions),
+        "progress_percentage": progress_pct,
+        "current_question_index": answered_count,
+        "next_question": next_question_payload,
+        "answers": [
+            {"question_id": r.question_id, "likert_value": r.likert_value, "seq": r.seq}
+            for r in responses
+        ],
+        "remaining_questions": [
+            {
+                "id": str(q.id),
+                "code": q.code,
+                "text": q.text,
+                "area": q.area,
+                "reverse_coded": q.reverse_coded,
+                "sort_order": q.sort_order,
+            }
+            for q in remaining_questions
+        ],
+        "resumed": answered_count > 0,
+    }
 
 
 def submit_answer(db: Session, session_id, question_id, likert_value: int):

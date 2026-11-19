@@ -8,6 +8,8 @@ from app.core.database import get_db
 from app.models.instrument import AssessmentVersion
 from app.knowledge_pack import (
     get_temperament_bank,
+    get_temperament_20_bank,
+    get_temperament_40_bank,
     get_emotional_intelligence_bank,
     get_emotion_indicators_bank,
     get_answer_options,
@@ -42,8 +44,20 @@ def get_scales():
 
 @router.get("/knowledge-pack/temperament")
 def get_temperament_catalog():
-    """Retrieve the standard 40-item classical temperament item bank."""
+    """Retrieve the standard 20-item classical temperament item bank."""
     return get_temperament_bank()
+
+
+@router.get("/knowledge-pack/temperament-20")
+def get_temperament_20_catalog():
+    """Retrieve the 20-item classical temperament item bank."""
+    return get_temperament_20_bank()
+
+
+@router.get("/knowledge-pack/temperament-40")
+def get_temperament_40_catalog():
+    """Retrieve the 40-item classical temperament item bank (historical)."""
+    return get_temperament_40_bank()
 
 
 @router.get("/knowledge-pack/emotional-intelligence")

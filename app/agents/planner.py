@@ -10,9 +10,9 @@ from app.agents.state import AssessmentGraphState
 
 
 def create_assessment_plan(
-    total_questions: int = 16,
+    total_questions: int = 20,
     target_dimensions: Optional[List[str]] = None,
-    instrument_code: str = "psychemetre_temperament_40",
+    instrument_code: str = "psychemetre_temperament_20",
 ) -> Dict[str, Any]:
     """Generate a structured assessment plan with stages and coverage targets."""
     if target_dimensions is None:
@@ -43,9 +43,9 @@ def planner_node(state: AssessmentGraphState) -> Dict[str, Any]:
         }
 
     answers = state.get("answers", [])
-    total = state.get("total_questions", 16)
+    total = state.get("total_questions", 20)
     answered_count = len(answers)
-    instrument_code = state.get("instrument_code", "psychemetre_temperament_40")
+    instrument_code = state.get("instrument_code", "psychemetre_temperament_20")
 
     plan = state.get("plan") or create_assessment_plan(
         total_questions=total,

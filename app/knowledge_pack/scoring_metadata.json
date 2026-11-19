@@ -3,9 +3,26 @@
   "disclaimer": "The Four Temperaments and Emotional Competencies are reflective self-exploration frameworks, not clinical psychological diagnoses. Scores represent self-reported inclinations.",
   "instruments": {
     "temperament": {
+      "code": "psychemetre_temperament_20",
+      "scale_min": 1,
+      "scale_max": 5,
+      "total_items": 20,
+      "items_per_dimension": 5,
+      "minimum_answers_per_dimension": 3,
+      "formula": "normalized_score = round(((raw_mean - 1) / (scale_max - 1)) * 100, 1)",
+      "reverse_score_formula": "corrected_value = (scale_min + scale_max) - raw_value",
+      "bands": [
+        {"name": "Low", "range": [0.0, 39.9], "interpretation": "Less frequently endorsed in everyday behavior; not absent, but less dominant."},
+        {"name": "Moderate", "range": [40.0, 69.9], "interpretation": "Moderately expressed; situational context and conscious choice often shape this tendency."},
+        {"name": "High", "range": [70.0, 100.0], "interpretation": "Prominently endorsed; a habitual reflective style in social, decision-making, or task settings."}
+      ]
+    },
+    "temperament_40": {
       "code": "psychemetre_temperament_40",
       "scale_min": 1,
       "scale_max": 5,
+      "total_items": 40,
+      "items_per_dimension": 10,
       "minimum_answers_per_dimension": 6,
       "formula": "normalized_score = round(((raw_mean - 1) / (scale_max - 1)) * 100, 1)",
       "reverse_score_formula": "corrected_value = (scale_min + scale_max) - raw_value",

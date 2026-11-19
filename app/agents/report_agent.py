@@ -38,7 +38,7 @@ def report_agent_scoring_node(state: AssessmentGraphState) -> Dict[str, Any]:
         for a in answers
     ]
 
-    instrument_code = state.get("instrument_code", "psychemetre_temperament_40")
+    instrument_code = state.get("instrument_code", "psychemetre_temperament_20")
     is_eq = instrument_code == "psychemetre_eq_25"
 
     if is_eq:

@@ -50,14 +50,21 @@ class AssessmentGraphState(TypedDict, total=False):
 def create_initial_state(
     session_id: str,
     user_id: str = "guest_user",
-    instrument_code: str = "psychemetre_temperament_40",
+    instrument_code: str = "psychemetre_temperament_20",
     instrument_version: str = "1.0.0",
     total_questions: Optional[int] = None,
 ) -> AssessmentGraphState:
     """Create a pristine, well-structured initial state for assessment orchestration."""
     is_eq = instrument_code == "psychemetre_eq_25"
     if total_questions is None:
-        total_questions = 25 if is_eq else 16
+        if is_eq:
+            total_questions = 25
+        elif instrument_code == "psychemetre_temperament_40":
+            total_questions = 40
+        elif instrument_code == "innermap_temperament":
+            total_questions = 16
+        else:
+            total_questions = 20
 
     target_dimensions = (
         ["self_awareness", "self_regulation", "intrinsic_motivation", "empathy", "social_skills"]
