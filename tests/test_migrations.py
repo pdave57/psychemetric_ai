@@ -53,6 +53,7 @@ def test_alembic_upgrade_downgrade_and_schema_match(tmp_path):
         "audit_log",
         "knowledge_documents",
         "knowledge_chunks",
+        "user_feedback",
     }
     assert expected.issubset(tables), f"Missing tables: {expected - tables}"
     engine.dispose()

@@ -123,7 +123,7 @@ class OpenAILLM(BaseLLM):
             if self.provider == "openrouter":
                 completion_kwargs["extra_headers"] = {
                     "HTTP-Referer": os.getenv("APP_URL", "https://localhost"),
-                    "X-Title": "PsychemetreAI",
+                    "X-Title": "AgenblueAI",
                 }
 
             resp = client.chat.completions.create(**completion_kwargs)

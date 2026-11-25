@@ -10,6 +10,7 @@ from app.models.session import AssessmentSession, UserResponse
 from app.models.result import TemperamentScore, EmotionAssessment, EmotionalTrigger, AssessmentReport
 from app.models.recommendation import Recommendation, RecommendationHistory
 from app.models.safety import SafetyEvent, AuditLog
+from app.models.feedback import UserFeedback
 
 
 def export_user_data(db: Session, user_id: uuid.UUID) -> Dict[str, Any]:
@@ -91,6 +92,13 @@ def purge_user_data(db: Session, user_id: uuid.UUID) -> bool:
     ).all()
     for s in sessions:
         db.delete(s)
+
+    # Anonymize submitted feedback so aggregate metrics remain intact without PII link
+    feedback_rows = db.scalars(
+        select(UserFeedback).where(UserFeedback.user_id == user_id)
+    ).all()
+    for fb in feedback_rows:
+        fb.user_id = None
 
     # Delete user (cascades to consent_records, recommendations)
     db.delete(user)

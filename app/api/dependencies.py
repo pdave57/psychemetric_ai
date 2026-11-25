@@ -39,3 +39,21 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
+
+
+FEEDBACK_ALLOWED_EMAIL = "pdave57@gmail.com"
+
+
+def require_feedback_access(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Restrict feedback viewing and management strictly to pdave57@gmail.com."""
+    if (
+        current_user.deleted_at is not None
+        or current_user.email.strip().lower() != FEEDBACK_ALLOWED_EMAIL
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Feedback access is restricted to authorized reviewers.",
+        )
+    return current_user

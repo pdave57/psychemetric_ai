@@ -1,6 +1,6 @@
 """Concept-based, semantic text chunking for the RAG knowledge pipeline.
 
-Follows the InnerMAP / PsychemetreAI Knowledge Corpus Plan:
+Follows the PsychemetreAI Knowledge Corpus Plan:
 - Chunks by conceptual section/unit (150–350 words) rather than rigid page boundaries.
 - Filters out non-relevant content (e.g., exercises, indices, bibliographies, clinical disorder diagnosis).
 - Attaches topic, subscale, concept, and source metadata to every chunk.

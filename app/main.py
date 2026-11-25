@@ -30,6 +30,7 @@ from app.api.routes import (
     agent_execution,
     knowledge,
     privacy,
+    feedback,
 )
 
 configure_logging()
@@ -97,6 +98,7 @@ for route, prefix, tag in [
     (agent_execution.router, "/api/v1/agents",          "Agent Orchestration"),
     (knowledge.router,       "/api/v1/knowledge",       "Knowledge Base / RAG"),
     (privacy.router,         "/api/v1/privacy",         "Data Privacy & NDPR"),
+    (feedback.router,        "/api/v1/feedback",        "User Feedback"),
 ]:
     app.include_router(route, prefix=prefix, tags=[tag])
 

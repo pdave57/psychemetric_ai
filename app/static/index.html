@@ -38,6 +38,16 @@
     input[type="text"] { flex: 1; background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 0.6rem 1rem; border-radius: 6px; outline: none; }
     button { background: var(--primary); color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 500; }
     button:hover { opacity: 0.9; }
+    .fb-question { margin-bottom: 1.25rem; }
+    .fb-label { display: block; font-size: 0.92rem; font-weight: 500; margin-bottom: 0.5rem; color: #e2e8f0; }
+    .fb-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .fb-pill { background: #0f172a; border: 1px solid var(--border); color: var(--text-muted); padding: 0.45rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.15s ease; }
+    .fb-pill:hover { border-color: var(--primary); color: #fff; }
+    .fb-pill.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .fb-scale-hints { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+    .fb-select, .fb-textarea { width: 100%; background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 0.6rem 0.85rem; border-radius: 6px; outline: none; font-size: 0.9rem; }
+    .fb-textarea { min-height: 80px; resize: vertical; }
+    .fb-status { margin-top: 0.75rem; font-size: 0.85rem; }
   </style>
 </head>
 <body>
@@ -100,6 +110,58 @@
         Model: <span id="narrativeModel">-</span> | Version: <span id="narrativeVer">-</span> | Numeric Consistency: <span id="narrativeValid" style="color: #34d399;">Verified</span>
       </div>
     </div>
+
+    <!-- User Experience Feedback -->
+    <div class="card" id="feedbackCard">
+      <div class="card-title">Share Your Experience</div>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem;">
+        A quick 5-question check-in to help us improve Agent Bleu.
+      </p>
+
+      <div class="fb-question">
+        <span class="fb-label">1. Overall, how would you rate your experience? (1–10)</span>
+        <div class="fb-pills" id="fbExperiencePills"></div>
+        <div class="fb-scale-hints"><span>1 — Needs major work</span><span>10 — Exceptional</span></div>
+      </div>
+
+      <div class="fb-question">
+        <span class="fb-label">2. How clear and effortless was the assessment flow? (1–5)</span>
+        <div class="fb-pills" id="fbEasePills"></div>
+        <div class="fb-scale-hints"><span>1 — Confusing</span><span>5 — Effortless</span></div>
+      </div>
+
+      <div class="fb-question">
+        <span class="fb-label">3. How accurate and insightful did your results feel? (1–5)</span>
+        <div class="fb-pills" id="fbInsightPills"></div>
+        <div class="fb-scale-hints"><span>1 — Not relevant</span><span>5 — Deeply insightful</span></div>
+      </div>
+
+      <div class="fb-question">
+        <span class="fb-label">4. Which part stood out most, and would you recommend Agent Bleu?</span>
+        <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: center;">
+          <select id="fbAspect" class="fb-select">
+            <option value="assessment_flow">Interactive Assessment Flow</option>
+            <option value="reflective_insights">Reflective Narrative &amp; Insights</option>
+            <option value="emotional_checkin">Emotional Check-in</option>
+            <option value="ui_design">Visual Design &amp; Clarity</option>
+            <option value="privacy_controls">Privacy &amp; Safeguards</option>
+            <option value="other">Other</option>
+          </select>
+          <div class="fb-pills" id="fbRecommendPills">
+            <button type="button" class="fb-pill active" data-val="true" onclick="selectRecommend(true, this)">Would Recommend</button>
+            <button type="button" class="fb-pill" data-val="false" onclick="selectRecommend(false, this)">Not Yet</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="fb-question">
+        <span class="fb-label">5. What is one thing we could improve or add? (Optional)</span>
+        <textarea id="fbComment" class="fb-textarea" placeholder="Share any thoughts or suggestions..."></textarea>
+      </div>
+
+      <button type="button" id="fbSubmitBtn" onclick="submitFeedback()">Submit Feedback</button>
+      <div id="fbStatus" class="fb-status"></div>
+    </div>
   </div>
 
   <script>
@@ -147,7 +209,85 @@
     // Auto-load sample narrative on initial visit
     window.addEventListener("DOMContentLoaded", () => {
       fetchLiveNarrative();
+      initFeedbackForm();
     });
+
+    const feedbackState = {
+      experience_rating: 8,
+      ease_of_use: 4,
+      insightfulness: 4,
+      would_recommend: true,
+    };
+
+    function renderPillScale(containerId, key, min, max) {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      el.innerHTML = "";
+      for (let i = min; i <= max; i++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "fb-pill" + (feedbackState[key] === i ? " active" : "");
+        btn.innerText = String(i);
+        btn.onclick = () => {
+          feedbackState[key] = i;
+          Array.from(el.children).forEach((c) => c.classList.remove("active"));
+          btn.classList.add("active");
+        };
+        el.appendChild(btn);
+      }
+    }
+
+    function selectRecommend(val, btn) {
+      feedbackState.would_recommend = val;
+      const parent = document.getElementById("fbRecommendPills");
+      Array.from(parent.children).forEach((c) => c.classList.remove("active"));
+      btn.classList.add("active");
+    }
+
+    function initFeedbackForm() {
+      renderPillScale("fbExperiencePills", "experience_rating", 1, 10);
+      renderPillScale("fbEasePills", "ease_of_use", 1, 5);
+      renderPillScale("fbInsightPills", "insightfulness", 1, 5);
+    }
+
+    async function submitFeedback() {
+      const btn = document.getElementById("fbSubmitBtn");
+      const statusEl = document.getElementById("fbStatus");
+      btn.disabled = true;
+      btn.innerText = "Submitting...";
+      statusEl.innerText = "";
+
+      try {
+        const resp = await fetch("/api/v1/feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            experience_rating: feedbackState.experience_rating,
+            ease_of_use: feedbackState.ease_of_use,
+            insightfulness: feedbackState.insightfulness,
+            most_valuable_aspect: document.getElementById("fbAspect").value,
+            would_recommend: feedbackState.would_recommend,
+            improvement_comment: document.getElementById("fbComment").value || null,
+          }),
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          statusEl.style.color = "#34d399";
+          statusEl.innerText = data.message || "Thank you for your feedback!";
+          document.getElementById("fbComment").value = "";
+        } else {
+          statusEl.style.color = "#fca5a5";
+          statusEl.innerText = data.detail || "Could not submit feedback.";
+        }
+      } catch (err) {
+        statusEl.style.color = "#fca5a5";
+        statusEl.innerText = "Error submitting feedback: " + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Submit Feedback";
+      }
+    }
 
     async function sendResponse() {
       const input = document.getElementById("userInput");

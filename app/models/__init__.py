@@ -54,6 +54,9 @@ from app.models.safety import SafetyEvent, AuditLog
 # Knowledge base
 from app.models.knowledge import KnowledgeDocument, KnowledgeChunk
 
+# User feedback
+from app.models.feedback import UserFeedback
+
 __all__ = [
     # enums
     "UserRole", "InstrumentStatus", "ItemKind", "SessionStatus",
@@ -72,4 +75,6 @@ __all__ = [
     "SafetyEvent", "AuditLog",
     # knowledge
     "KnowledgeDocument", "KnowledgeChunk",
+    # feedback
+    "UserFeedback",
 ]
