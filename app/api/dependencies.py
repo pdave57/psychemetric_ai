@@ -6,14 +6,14 @@ from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, run_sync
 from app.core.security import decode_token
 from app.models.user import User
 
 security_scheme = HTTPBearer(auto_error=False)
 
 
-def get_current_user_optional(
+async def get_current_user_optional(
     creds: Optional[HTTPAuthorizationCredentials] = Security(security_scheme),
     db: Session = Depends(get_db)
 ) -> Optional[User]:
@@ -26,10 +26,10 @@ def get_current_user_optional(
         user_uuid = uuid.UUID(payload.get("sub"))
     except (ValueError, TypeError):
         return None
-    return db.get(User, user_uuid)
+    return await run_sync(db.get, User, user_uuid)
 
 
-def get_current_user(
+async def get_current_user(
     user: Optional[User] = Depends(get_current_user_optional)
 ) -> User:
     if not user:
@@ -44,7 +44,7 @@ def get_current_user(
 FEEDBACK_ALLOWED_EMAIL = "pdave57@gmail.com"
 
 
-def require_feedback_access(
+async def require_feedback_access(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Restrict feedback viewing and management strictly to pdave57@gmail.com."""

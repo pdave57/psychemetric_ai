@@ -32,7 +32,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, run_sync
 from app.core.llm import get_llm
 from app.models import (
     AssessmentSession,
@@ -98,106 +98,108 @@ def _dominant(scores: list[dict[str, Any]]) -> str:
 
 
 @router.post("/sessions/{session_id}/generate")
-def generate_result(session_id: uuid.UUID, db: Session = Depends(get_db)):
+async def generate_result(session_id: uuid.UUID, db: Session = Depends(get_db)):
     """Generate and persist narrative + motion + recommendations for a session."""
-    session = db.get(AssessmentSession, session_id)
-    if not session:
-        raise HTTPException(404, "Session not found")
-    if session.status != "completed":
-        raise HTTPException(409, "Assessment is not completed yet")
+    def _generate() -> dict[str, Any]:
+        session = db.get(AssessmentSession, session_id)
+        if not session:
+            raise HTTPException(404, "Session not found")
+        if session.status != "completed":
+            raise HTTPException(409, "Assessment is not completed yet")
 
-    scores = _session_score_rows(db, session_id)
-    emotion_payload = _emotion_rows(db, session_id)
+        scores = _session_score_rows(db, session_id)
+        emotion_payload = _emotion_rows(db, session_id)
 
-    narrative_payload = generate_narrative_report(
-        scores=scores,
-        user_id=str(session.user_id),
-        emotion_rows=emotion_payload,
-    )
-    motion_payload = generate_motion_interpretation(
-        scores=scores,
-        user_id=str(session.user_id),
-        emotion_rows=emotion_payload,
-    )
+        narrative_payload = generate_narrative_report(
+            scores=scores,
+            user_id=str(session.user_id),
+            emotion_rows=emotion_payload,
+        )
+        motion_payload = generate_motion_interpretation(
+            scores=scores,
+            user_id=str(session.user_id),
+            emotion_rows=emotion_payload,
+        )
 
-    # Persist narrative + motion together in the report snapshot (one report
-    # per session; locate by session_id since the PK is ``id``).
-    report = db.scalar(
-        select(AssessmentReport).where(AssessmentReport.session_id == session_id)
-    )
-    narrative_snapshot = {
-        **narrative_payload,
-        "motion": motion_payload.get("motion"),
-        "motion_prompt_version": motion_payload.get("prompt_version"),
-        "motion_llm_model": motion_payload.get("llm_model"),
-    }
-    if report is None:
-        report = AssessmentReport(
-            session_id=session_id,
-            structured={
+        # Persist narrative + motion together in the report snapshot (one report
+        # per session; locate by session_id since the PK is ``id``).
+        report = db.scalar(
+            select(AssessmentReport).where(AssessmentReport.session_id == session_id)
+        )
+        narrative_snapshot = {
+            **narrative_payload,
+            "motion": motion_payload.get("motion"),
+            "motion_prompt_version": motion_payload.get("prompt_version"),
+            "motion_llm_model": motion_payload.get("llm_model"),
+        }
+        if report is None:
+            report = AssessmentReport(
+                session_id=session_id,
+                structured={
+                    "temperament_scores": scores,
+                    "emotion_assessments": emotion_payload,
+                },
+                narrative=narrative_snapshot,
+                llm_model=narrative_payload.get("llm_model"),
+                prompt_version=narrative_payload.get("prompt_version"),
+            )
+            db.add(report)
+        else:
+            report.structured = {
                 "temperament_scores": scores,
                 "emotion_assessments": emotion_payload,
-            },
-            narrative=narrative_snapshot,
-            llm_model=narrative_payload.get("llm_model"),
-            prompt_version=narrative_payload.get("prompt_version"),
-        )
-        db.add(report)
-    else:
-        report.structured = {
+            }
+            report.narrative = narrative_snapshot
+            report.llm_model = narrative_payload.get("llm_model")
+            report.prompt_version = narrative_payload.get("prompt_version")
+        db.flush()
+
+        # Recommendations from the knowledge-pack rule engine.
+        seed_recommendation_templates(db)
+        recs = match_and_generate_recommendations(db, session_id)
+        templates_by_id = {
+            str(t.id): t for t in db.scalars(select(RecommendationTemplate)).all()
+        }
+        db.commit()
+
+        recommendation_payload = [
+            {
+                "id": str(r.id),
+                "template_id": r.template_id,
+                "title": (templates_by_id.get(r.template_id).title
+                          if templates_by_id.get(r.template_id) else r.template_id),
+                "body": (
+                    templates_by_id.get(r.template_id).body
+                    if templates_by_id.get(r.template_id)
+                    else {}
+                ),
+                "status": r.status.value,
+                "rationale": r.rationale,
+            }
+            for r in recs
+        ]
+
+        return {
+            "session_id": session_id,
+            "report_id": str(report.id),
+            "status": "completed",
+            "dominant": _dominant(scores),
             "temperament_scores": scores,
             "emotion_assessments": emotion_payload,
-        }
-        report.narrative = narrative_snapshot
-        report.llm_model = narrative_payload.get("llm_model")
-        report.prompt_version = narrative_payload.get("prompt_version")
-    db.flush()
-
-    # Recommendations from the knowledge-pack rule engine.
-    seed_recommendation_templates(db)
-    recs = match_and_generate_recommendations(db, session_id)
-    templates_by_id = {
-        str(t.id): t for t in db.scalars(select(RecommendationTemplate)).all()
-    }
-    db.commit()
-
-    recommendation_payload = [
-        {
-            "id": str(r.id),
-            "template_id": r.template_id,
-            "title": (templates_by_id.get(r.template_id).title
-                      if templates_by_id.get(r.template_id) else r.template_id),
-            "body": (
-                templates_by_id.get(r.template_id).body
-                if templates_by_id.get(r.template_id)
-                else {}
+            "narrative": narrative_payload.get("narrative", ""),
+            "motion": motion_payload.get("motion", ""),
+            "narrative_report": narrative_payload,
+            "motion_report": motion_payload,
+            "recommendations": recommendation_payload,
+            "llm_model": narrative_payload.get("llm_model"),
+            "prompt_version": narrative_payload.get("prompt_version"),
+            "disclaimer": (
+                "Classical temperaments and trait-motion readings are reflective frameworks, "
+                "not validated diagnoses. Scores are self-reported tendencies."
             ),
-            "status": r.status.value,
-            "rationale": r.rationale,
         }
-        for r in recs
-    ]
 
-    leaders = sorted(scores, key=lambda x: x.get("normalized_score") or 0, reverse=True)
-    return {
-        "session_id": session_id,
-        "report_id": str(report.id),
-        "status": "completed",
-        "dominant": _dominant(scores),
-        "temperament_scores": scores,
-        "emotion_assessments": emotion_payload,
-        "narrative": narrative_payload.get("narrative", ""),
-        "motion": motion_payload.get("motion", ""),
-        "narrative_report": narrative_payload,
-        "motion_report": motion_payload,
-        "recommendations": recommendation_payload,
-        "llm_model": narrative_payload.get("llm_model"),
-        "prompt_version": narrative_payload.get("prompt_version"),
-        "disclaimer": (
-            "Classical temperaments and trait-motion readings are reflective frameworks, "
-            "not validated diagnoses. Scores are self-reported tendencies."
-        ),
-    }
+    return await run_sync(_generate)
 
 
 async def _result_event_stream(

@@ -10,7 +10,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, run_sync
 from app.agents.graph import build_assessment_graph
 from app.models.session import AssessmentSession, UserResponse
 from app.models.instrument import Question
@@ -31,74 +31,77 @@ class AgentStepRequest(BaseModel):
 
 
 @router.post("/step")
-def run_agent_step(payload: AgentStepRequest, db: Session = Depends(get_db)):
+async def run_agent_step(payload: AgentStepRequest, db: Session = Depends(get_db)):
     """Run one step of the interactive assessment graph using thread checkpointing."""
-    thread_config = {"configurable": {"thread_id": payload.session_id}}
+    def _step() -> dict:
+        thread_config = {"configurable": {"thread_id": payload.session_id}}
 
-    current_state = graph_engine.get_state(thread_config)
+        current_state = graph_engine.get_state(thread_config)
 
-    answers = []
-    if current_state and current_state.values:
-        answers = list(current_state.values.get("answers", []))
+        answers = []
+        if current_state and current_state.values:
+            answers = list(current_state.values.get("answers", []))
 
-    # Seamless resumption: if in-memory answers empty, recover from database
-    if not answers:
+        # Seamless resumption: if in-memory answers empty, recover from database
+        if not answers:
+            try:
+                session_uuid = uuid.UUID(payload.session_id)
+                db_responses = db.scalars(
+                    select(UserResponse).where(UserResponse.session_id == session_uuid).order_by(UserResponse.seq)
+                ).all()
+                for r in db_responses:
+                    q = db.get(Question, r.question_id)
+                    dim = list(q.loads.keys())[0] if q and q.loads else (q.area if q else "sanguine")
+                    answers.append({
+                        "question_id": str(r.question_id),
+                        "value": r.likert_value,
+                        "dimension": dim,
+                        "area": q.area if q else "general",
+                    })
+            except Exception:
+                pass
+
+        if payload.answer_value is not None or payload.free_text:
+            answers.append({
+                "question_id": f"q_{len(answers)+1}",
+                "value": payload.answer_value,
+                "free_text": payload.free_text,
+                "dimension": payload.dimension or "sanguine",
+            })
+
+        input_state = {
+            "session_id": payload.session_id,
+            "user_id": payload.user_id,
+            "answers": answers,
+            "total_questions": 4,  # short interactive threshold for graph demo
+        }
+
+        result = graph_engine.invoke(input_state, config=thread_config)
+
+        # Sync back to DB if session exists
         try:
             session_uuid = uuid.UUID(payload.session_id)
-            db_responses = db.scalars(
-                select(UserResponse).where(UserResponse.session_id == session_uuid).order_by(UserResponse.seq)
-            ).all()
-            for r in db_responses:
-                q = db.get(Question, r.question_id)
-                dim = list(q.loads.keys())[0] if q and q.loads else (q.area if q else "sanguine")
-                answers.append({
-                    "question_id": str(r.question_id),
-                    "value": r.likert_value,
-                    "dimension": dim,
-                    "area": q.area if q else "general",
-                })
+            sess = db.get(AssessmentSession, session_uuid)
+            if sess:
+                if result.get("safety_flagged"):
+                    sess.status = SessionStatus.safety_paused
+                elif result.get("phase") == "completed":
+                    sess.status = SessionStatus.completed
+                db.commit()
         except Exception:
             pass
 
-    if payload.answer_value is not None or payload.free_text:
-        answers.append({
-            "question_id": f"q_{len(answers)+1}",
-            "value": payload.answer_value,
-            "free_text": payload.free_text,
-            "dimension": payload.dimension or "sanguine",
-        })
+        return {
+            "session_id": payload.session_id,
+            "phase": result.get("phase"),
+            "interrupted": result.get("interrupted"),
+            "safety_flagged": result.get("safety_flagged"),
+            "safety_event": result.get("safety_event"),
+            "temperament_scores": result.get("temperament_scores"),
+            "narrative_report": result.get("narrative_report"),
+        }
 
-    input_state = {
-        "session_id": payload.session_id,
-        "user_id": payload.user_id,
-        "answers": answers,
-        "total_questions": 4,  # short interactive threshold for graph demo
-    }
-
-    result = graph_engine.invoke(input_state, config=thread_config)
-
-    # Sync back to DB if session exists
-    try:
-        session_uuid = uuid.UUID(payload.session_id)
-        sess = db.get(AssessmentSession, session_uuid)
-        if sess:
-            if result.get("safety_flagged"):
-                sess.status = SessionStatus.safety_paused
-            elif result.get("phase") == "completed":
-                sess.status = SessionStatus.completed
-            db.commit()
-    except Exception:
-        pass
-
-    return {
-        "session_id": payload.session_id,
-        "phase": result.get("phase"),
-        "interrupted": result.get("interrupted"),
-        "safety_flagged": result.get("safety_flagged"),
-        "safety_event": result.get("safety_event"),
-        "temperament_scores": result.get("temperament_scores"),
-        "narrative_report": result.get("narrative_report"),
-    }
+    return await run_sync(_step)
 
 
 class NarrativeSampleRequest(BaseModel):
@@ -107,7 +110,7 @@ class NarrativeSampleRequest(BaseModel):
 
 
 @router.post("/narrative/sample")
-def generate_sample_narrative(payload: Optional[NarrativeSampleRequest] = None):
+async def generate_sample_narrative(payload: Optional[NarrativeSampleRequest] = None):
     """Generate a live reflective narrative sample using the active LLM."""
     scores = (payload and payload.scores) or [
         {"dimension": "sanguine", "score": 75.0, "interpretation": "High reflective social engagement"},
@@ -117,7 +120,7 @@ def generate_sample_narrative(payload: Optional[NarrativeSampleRequest] = None):
     ]
     user_id = (payload and payload.user_id) or "demo_user"
     from app.services.narrative_service import generate_narrative_report
-    report = generate_narrative_report(scores=scores, user_id=user_id)
+    report = await run_sync(generate_narrative_report, scores=scores, user_id=user_id)
     return {
         "status": "success",
         "scores": scores,

@@ -32,6 +32,10 @@ class BaseLLM(ABC):
         """Produce completion text."""
         pass
 
+    async def agenerate(self, prompt: str, system: Optional[str] = None, max_tokens: int = 500) -> str:
+        """Asynchronously produce completion text."""
+        return await asyncio.to_thread(self.generate, prompt, system, max_tokens)
+
     async def stream_generate(
         self,
         prompt: str,
@@ -130,6 +134,42 @@ class OpenAILLM(BaseLLM):
             return resp.choices[0].message.content or ""
         except Exception as e:
             logger.error(f"LLM completion failed: {e}; falling back to NullLLM")
+            return self.fallback.generate(prompt, system, max_tokens)
+
+    async def agenerate(self, prompt: str, system: Optional[str] = None, max_tokens: int = 500) -> str:
+        if not self.api_key:
+            logger.warning("No OpenAI/OpenRouter API key detected; using NullLLM fallback.")
+            return self.fallback.generate(prompt, system, max_tokens)
+
+        try:
+            from openai import AsyncOpenAI
+
+            client_kwargs = {"api_key": self.api_key, "timeout": 15.0}
+            if self.base_url:
+                client_kwargs["base_url"] = self.base_url
+
+            client = AsyncOpenAI(**client_kwargs)
+            messages = []
+            if system:
+                messages.append({"role": "system", "content": system})
+            messages.append({"role": "user", "content": prompt})
+
+            completion_kwargs = {
+                "model": self.model,
+                "messages": messages,
+                "max_tokens": max_tokens,
+                "temperature": 0.3,
+            }
+            if self.provider == "openrouter":
+                completion_kwargs["extra_headers"] = {
+                    "HTTP-Referer": os.getenv("APP_URL", "https://localhost"),
+                    "X-Title": "AgenblueAI",
+                }
+
+            resp = await client.chat.completions.create(**completion_kwargs)
+            return resp.choices[0].message.content or ""
+        except Exception as e:
+            logger.error(f"Async LLM completion failed: {e}; falling back to NullLLM")
             return self.fallback.generate(prompt, system, max_tokens)
 
     async def stream_generate(

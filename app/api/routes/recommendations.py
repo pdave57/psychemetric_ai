@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, run_sync
 from app.services.recommendation_service import (
     match_and_generate_recommendations,
     record_recommendation_feedback,
@@ -27,58 +27,65 @@ class FeedbackRequest(BaseModel):
 
 
 @router.post("/sessions/{session_id}/generate")
-def generate_recommendations(session_id: uuid.UUID, db: Session = Depends(get_db)):
+async def generate_recommendations(session_id: uuid.UUID, db: Session = Depends(get_db)):
     """Evaluate session results against recommendation rules and generate personalized recommendations."""
-    seed_recommendation_templates(db)
-    recs = match_and_generate_recommendations(db, session_id)
-    return {
-        "session_id": session_id,
-        "count": len(recs),
-        "recommendations": [
-            {
-                "id": r.id,
-                "template_id": r.template_id,
-                "status": r.status.value,
-                "rationale": r.rationale,
-                "created_at": r.created_at,
-            }
-            for r in recs
-        ]
-    }
+    def _generate() -> dict:
+        seed_recommendation_templates(db)
+        recs = match_and_generate_recommendations(db, session_id)
+        return {
+            "session_id": session_id,
+            "count": len(recs),
+            "recommendations": [
+                {
+                    "id": r.id,
+                    "template_id": r.template_id,
+                    "status": r.status.value,
+                    "rationale": r.rationale,
+                    "created_at": r.created_at,
+                }
+                for r in recs
+            ],
+        }
+
+    return await run_sync(_generate)
 
 
 @router.get("/sessions/{session_id}")
-def get_session_recommendations(session_id: uuid.UUID, db: Session = Depends(get_db)):
+async def get_session_recommendations(session_id: uuid.UUID, db: Session = Depends(get_db)):
     """Retrieve all recommendations for a session including template details."""
-    recs = db.scalars(
-        select(Recommendation).where(Recommendation.session_id == session_id)
-    ).all()
+    def _get() -> dict:
+        recs = db.scalars(
+            select(Recommendation).where(Recommendation.session_id == session_id)
+        ).all()
 
-    result = []
-    for r in recs:
-        template = db.get(RecommendationTemplate, r.template_id)
-        result.append({
-            "id": r.id,
-            "template_id": r.template_id,
-            "title": template.title if template else r.template_id,
-            "body": template.body if template else {},
-            "evidence": template.evidence.value if template else "unreviewed_seed",
-            "status": r.status.value,
-            "rationale": r.rationale,
-            "created_at": r.created_at,
-        })
-    return {"session_id": session_id, "recommendations": result}
+        result = []
+        for r in recs:
+            template = db.get(RecommendationTemplate, r.template_id)
+            result.append({
+                "id": r.id,
+                "template_id": r.template_id,
+                "title": template.title if template else r.template_id,
+                "body": template.body if template else {},
+                "evidence": template.evidence.value if template else "unreviewed_seed",
+                "status": r.status.value,
+                "rationale": r.rationale,
+                "created_at": r.created_at,
+            })
+        return {"session_id": session_id, "recommendations": result}
+
+    return await run_sync(_get)
 
 
 @router.post("/{recommendation_id}/feedback")
-def submit_feedback(
+async def submit_feedback(
     recommendation_id: uuid.UUID,
     payload: FeedbackRequest,
     db: Session = Depends(get_db)
 ):
     """Update status, submit rating or note on a recommendation."""
     try:
-        hist = record_recommendation_feedback(
+        hist = await run_sync(
+            record_recommendation_feedback,
             db=db,
             recommendation_id=recommendation_id,
             event=payload.event,

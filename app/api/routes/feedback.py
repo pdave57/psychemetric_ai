@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user_optional, require_feedback_access
-from app.core.database import get_db
+from app.core.database import get_db, run_sync
 from app.models.feedback import UserFeedback
 from app.models.user import User
 from app.schemas.feedback import (
@@ -81,7 +81,7 @@ MODERN_FEEDBACK_QUESTIONS: List[FeedbackQuestion] = [
 
 
 @router.get("/questions", response_model=FeedbackQuestionsResponse)
-def get_feedback_questions():
+async def get_feedback_questions():
     """Return the modern 5-question feedback survey structure."""
     return FeedbackQuestionsResponse(
         title="Share Your Experience",
@@ -92,26 +92,31 @@ def get_feedback_questions():
 
 @router.post("", response_model=FeedbackSubmitResponse, status_code=status.HTTP_201_CREATED)
 @router.post("/", response_model=FeedbackSubmitResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
-def submit_feedback(
+async def submit_feedback(
     payload: FeedbackSubmitRequest,
     current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """Submit user feedback (1-10 experience rating + 5-question modern survey)."""
     comment = payload.improvement_comment.strip() if payload.improvement_comment else None
-    entry = UserFeedback(
-        user_id=current_user.id if current_user else None,
-        session_id=payload.session_id,
-        experience_rating=payload.experience_rating,
-        ease_of_use=payload.ease_of_use,
-        insightfulness=payload.insightfulness,
-        most_valuable_aspect=payload.most_valuable_aspect,
-        would_recommend=payload.would_recommend,
-        improvement_comment=comment or None,
-    )
-    db.add(entry)
-    db.commit()
-    db.refresh(entry)
+
+    def _save() -> UserFeedback:
+        entry = UserFeedback(
+            user_id=current_user.id if current_user else None,
+            session_id=payload.session_id,
+            experience_rating=payload.experience_rating,
+            ease_of_use=payload.ease_of_use,
+            insightfulness=payload.insightfulness,
+            most_valuable_aspect=payload.most_valuable_aspect,
+            would_recommend=payload.would_recommend,
+            improvement_comment=comment or None,
+        )
+        db.add(entry)
+        db.commit()
+        db.refresh(entry)
+        return entry
+
+    entry = await run_sync(_save)
     return FeedbackSubmitResponse(
         id=entry.id,
         experience_rating=entry.experience_rating,
@@ -121,7 +126,7 @@ def submit_feedback(
 
 @router.get("", response_model=List[FeedbackItemResponse])
 @router.get("/", response_model=List[FeedbackItemResponse], include_in_schema=False)
-def list_feedback(
+async def list_feedback(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     min_rating: Optional[int] = Query(default=None, ge=1, le=10),
@@ -130,22 +135,25 @@ def list_feedback(
     db: Session = Depends(get_db),
 ):
     """List submitted user feedback. Restricted strictly to pdave57@gmail.com."""
-    stmt = select(UserFeedback).order_by(UserFeedback.created_at.desc())
-    if min_rating is not None:
-        stmt = stmt.where(UserFeedback.experience_rating >= min_rating)
-    if max_rating is not None:
-        stmt = stmt.where(UserFeedback.experience_rating <= max_rating)
-    stmt = stmt.offset(offset).limit(limit)
-    return db.scalars(stmt).all()
+    def _list() -> list[UserFeedback]:
+        stmt = select(UserFeedback).order_by(UserFeedback.created_at.desc())
+        if min_rating is not None:
+            stmt = stmt.where(UserFeedback.experience_rating >= min_rating)
+        if max_rating is not None:
+            stmt = stmt.where(UserFeedback.experience_rating <= max_rating)
+        stmt = stmt.offset(offset).limit(limit)
+        return list(db.scalars(stmt).all())
+
+    return await run_sync(_list)
 
 
 @router.get("/summary", response_model=FeedbackSummaryResponse)
-def get_feedback_summary(
+async def get_feedback_summary(
     _: User = Depends(require_feedback_access),
     db: Session = Depends(get_db),
 ):
     """Return aggregated feedback metrics. Restricted strictly to pdave57@gmail.com."""
-    rows = db.scalars(select(UserFeedback)).all()
+    rows = await run_sync(lambda: db.scalars(select(UserFeedback)).all())
     total = len(rows)
     distribution = {rating: 0 for rating in range(1, 11)}
     aspect_breakdown: dict[str, int] = {}
@@ -178,27 +186,30 @@ def get_feedback_summary(
 
 
 @router.get("/{feedback_id}", response_model=FeedbackItemResponse)
-def get_feedback_detail(
+async def get_feedback_detail(
     feedback_id: uuid.UUID,
     _: User = Depends(require_feedback_access),
     db: Session = Depends(get_db),
 ):
     """Retrieve a single feedback entry. Restricted strictly to pdave57@gmail.com."""
-    entry = db.get(UserFeedback, feedback_id)
+    entry = await run_sync(db.get, UserFeedback, feedback_id)
     if not entry:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Feedback entry not found.")
     return entry
 
 
 @router.delete("/{feedback_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_feedback_entry(
+async def delete_feedback_entry(
     feedback_id: uuid.UUID,
     _: User = Depends(require_feedback_access),
     db: Session = Depends(get_db),
 ):
     """Delete a feedback entry. Restricted strictly to pdave57@gmail.com."""
-    entry = db.get(UserFeedback, feedback_id)
-    if not entry:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Feedback entry not found.")
-    db.delete(entry)
-    db.commit()
+    def _delete() -> None:
+        entry = db.get(UserFeedback, feedback_id)
+        if not entry:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Feedback entry not found.")
+        db.delete(entry)
+        db.commit()
+
+    await run_sync(_delete)

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, run_sync
 from app.core.security import (
     hash_password,
     verify_password,
@@ -62,30 +62,33 @@ class TokenResponse(BaseModel):
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+async def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     if not payload.is_adult_confirmed:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="PsychemetreAI is restricted to adults aged 18 and older. Confirmation required.",
         )
 
-    existing = db.scalar(select(User).where(User.email == payload.email.lower()))
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="A user with this email address already exists.",
+    def _register_user() -> User:
+        existing = db.scalar(select(User).where(User.email == payload.email.lower()))
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="A user with this email address already exists.",
+            )
+
+        user = User(
+            email=payload.email.lower(),
+            password_hash=hash_password(payload.password),
+            role=UserRole.user,
+            is_adult_confirmed=payload.is_adult_confirmed,
         )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
 
-    user = User(
-        email=payload.email.lower(),
-        password_hash=hash_password(payload.password),
-        role=UserRole.user,
-        is_adult_confirmed=payload.is_adult_confirmed,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
+    user = await run_sync(_register_user)
     user_id_str = str(user.id)
     return TokenResponse(
         access_token=create_access_token(user_id_str, user.role.value),
@@ -95,14 +98,17 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    user = db.scalar(select(User).where(User.email == payload.email.lower()))
-    if not user or not verify_password(payload.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password.",
-        )
+async def login(payload: LoginRequest, db: Session = Depends(get_db)):
+    def _authenticate() -> User:
+        user = db.scalar(select(User).where(User.email == payload.email.lower()))
+        if not user or not verify_password(payload.password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password.",
+            )
+        return user
 
+    user = await run_sync(_authenticate)
     user_id_str = str(user.id)
     return TokenResponse(
         access_token=create_access_token(user_id_str, user.role.value),
@@ -112,7 +118,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/refresh", response_model=TokenResponse)
-def refresh(payload: RefreshRequest, db: Session = Depends(get_db)):
+async def refresh(payload: RefreshRequest, db: Session = Depends(get_db)):
     token_data = decode_token(payload.refresh_token)
     if not token_data or token_data.get("token_type") != "refresh":
         raise HTTPException(
@@ -128,7 +134,7 @@ def refresh(payload: RefreshRequest, db: Session = Depends(get_db)):
             detail="Invalid or expired refresh token.",
         )
 
-    user = db.get(User, user_uuid)
+    user = await run_sync(db.get, User, user_uuid)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -144,5 +150,5 @@ def refresh(payload: RefreshRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/status")
-def auth_status():
+async def auth_status():
     return {"status": "active", "auth_scheme": "bearer_jwt"}

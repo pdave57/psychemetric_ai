@@ -1,10 +1,21 @@
 """SQLAlchemy engine/session setup shared by the API and Alembic."""
-from collections.abc import Generator
+from collections.abc import Callable, Generator
+from typing import ParamSpec, TypeVar
+
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from starlette.concurrency import run_in_threadpool
 
 from app.core.config import DATABASE_URL
+
+P = ParamSpec("P")
+T = TypeVar("T")
+
+
+async def run_sync(func: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
+    """Run a blocking DB/service function in Starlette's threadpool from async routes."""
+    return await run_in_threadpool(func, *args, **kwargs)
 
 
 class Base(DeclarativeBase):

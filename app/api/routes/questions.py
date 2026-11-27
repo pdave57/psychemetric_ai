@@ -24,7 +24,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, run_sync
 from app.models import AssessmentSession
 from app.repositories.assessment_repository import get_questions, get_options
 
@@ -78,23 +78,26 @@ async def _question_event_stream(
 
 
 @router.get("/sessions/{session_id}")
-def questions(session_id: uuid.UUID, db: Session = Depends(get_db)):
-    s = db.get(AssessmentSession, session_id)
-    if not s:
-        raise HTTPException(404, "Session not found")
-    return [
-        {
-            "id":            q.id,
-            "code":          q.code,
-            "text":          q.text,
-            "area":          q.area,
-            "kind":          q.kind,
-            "reverse_coded": q.reverse_coded,
-            "sort_order":    q.sort_order,
-            "options":       [{"code": o.code, "text": o.text} for o in get_options(db, q.id)],
-        }
-        for q in get_questions(db, s.version_id)
-    ]
+async def questions(session_id: uuid.UUID, db: Session = Depends(get_db)):
+    def _load_questions() -> list[dict]:
+        s = db.get(AssessmentSession, session_id)
+        if not s:
+            raise HTTPException(404, "Session not found")
+        return [
+            {
+                "id":            q.id,
+                "code":          q.code,
+                "text":          q.text,
+                "area":          q.area,
+                "kind":          q.kind,
+                "reverse_coded": q.reverse_coded,
+                "sort_order":    q.sort_order,
+                "options":       [{"code": o.code, "text": o.text} for o in get_options(db, q.id)],
+            }
+            for q in get_questions(db, s.version_id)
+        ]
+
+    return await run_sync(_load_questions)
 
 
 @router.get("/sessions/{session_id}/stream")
@@ -110,9 +113,9 @@ async def questions_stream(session_id: uuid.UUID, db: Session = Depends(get_db))
         event: complete
         data: {"session_id": "...", "total_questions": 40}
     """
-    # Validate the session up front (synchronously) so a missing session
+    # Validate the session up front so a missing session
     # becomes a 404 instead of an aborting event stream.
-    s = db.get(AssessmentSession, session_id)
+    s = await run_sync(db.get, AssessmentSession, session_id)
     if not s:
         raise HTTPException(404, "Session not found")
 

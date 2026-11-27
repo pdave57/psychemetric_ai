@@ -5,13 +5,14 @@ Startup hook:
   - Seeds the prototype instrument and recommendation templates idempotently.
 """
 
+from contextlib import asynccontextmanager
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from app.core.database import Base, engine, SessionLocal
+from app.core.database import Base, engine, SessionLocal, run_sync
 from app.core.logging import configure_logging
 from app.repositories.assessment_repository import seed_initial_instrument
 from app.services.recommendation_service import seed_recommendation_templates
@@ -35,32 +36,7 @@ from app.api.routes import (
 
 configure_logging()
 
-app = FastAPI(
-    title="Agent Bleu — Personal Assessment API",
-    version="0.5.0",
-    description=(
-        "Reflective temperament assessment, emotional self-reports, "
-        "personalized recommendations, safety monitoring, LangGraph orchestration, "
-        "RAG knowledge retrieval, and NDPR/GDPR privacy controls. Backend for Agent Bleu."
-    ),
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://agentblue.onrender.com",
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://127.0.0.1:3000",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.on_event("startup")
-def startup():
+def _init_database_and_seed() -> None:
     try:
         if "postgres" in str(engine.url):
             try:
@@ -83,6 +59,37 @@ def startup():
         pass
 
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    await run_sync(_init_database_and_seed)
+    yield
+
+
+app = FastAPI(
+    title="Agent Bleu — Personal Assessment API",
+    version="0.5.0",
+    description=(
+        "Reflective temperament assessment, emotional self-reports, "
+        "personalized recommendations, safety monitoring, LangGraph orchestration, "
+        "RAG knowledge retrieval, and NDPR/GDPR privacy controls. Backend for Agent Bleu."
+    ),
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://agentblue.onrender.com",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 for route, prefix, tag in [
     (auth.router,            "/api/v1/auth",            "Authentication"),
     (consent.router,         "/api/v1/consent",         "Consent"),
@@ -102,6 +109,11 @@ for route, prefix, tag in [
 ]:
     app.include_router(route, prefix=prefix, tags=[tag])
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 # Serve static frontend / SPA
 static_path = Path(__file__).resolve().parent / "static"
 dist_path = Path(__file__).resolve().parent.parent / "agentbleu" / "dist"
@@ -114,19 +126,14 @@ if frontend_dir.exists():
         app.mount("/static", StaticFiles(directory=frontend_dir / "static"), name="static")
 
     @app.get("/")
-    def serve_dashboard():
+    async def serve_dashboard():
         return FileResponse(frontend_dir / "index.html")
 
     @app.get("/{full_path:path}")
-    def serve_spa_fallback(full_path: str):
+    async def serve_spa_fallback(full_path: str):
         if full_path.startswith(("api/", "health", "docs", "redoc", "openapi.json")):
             raise HTTPException(404, detail="Not Found")
         target_file = frontend_dir / full_path
         if target_file.is_file():
             return FileResponse(target_file)
         return FileResponse(frontend_dir / "index.html")
-
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}

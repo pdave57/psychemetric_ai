@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, run_sync
 from app.models.instrument import AssessmentVersion
 from app.knowledge_pack import (
     get_temperament_bank,
@@ -21,9 +21,9 @@ router = APIRouter()
 
 
 @router.get("/instruments")
-def list_available_instruments(db: Session = Depends(get_db)):
+async def list_available_instruments(db: Session = Depends(get_db)):
     """List all seeded assessment instruments."""
-    versions = db.scalars(select(AssessmentVersion)).all()
+    versions = await run_sync(lambda: db.scalars(select(AssessmentVersion)).all())
     return {
         "instruments": [
             {
@@ -39,48 +39,48 @@ def list_available_instruments(db: Session = Depends(get_db)):
 
 
 @router.get("/knowledge-pack/scales")
-def get_scales():
+async def get_scales():
     """Retrieve standard assessment scales and response option structures."""
-    return get_answer_options()
+    return await run_sync(get_answer_options)
 
 
 @router.get("/knowledge-pack/temperament")
-def get_temperament_catalog():
+async def get_temperament_catalog():
     """Retrieve the standard 20-item classical temperament item bank."""
-    return get_temperament_bank()
+    return await run_sync(get_temperament_bank)
 
 
 @router.get("/knowledge-pack/temperament-20")
-def get_temperament_20_catalog():
+async def get_temperament_20_catalog():
     """Retrieve the 20-item classical temperament item bank."""
-    return get_temperament_20_bank()
+    return await run_sync(get_temperament_20_bank)
 
 
 @router.get("/knowledge-pack/temperament-40")
-def get_temperament_40_catalog():
+async def get_temperament_40_catalog():
     """Retrieve the 40-item classical temperament item bank (historical)."""
-    return get_temperament_40_bank()
+    return await run_sync(get_temperament_40_bank)
 
 
 @router.get("/knowledge-pack/emotional-intelligence")
-def get_eq_catalog():
+async def get_eq_catalog():
     """Retrieve the standard 15-item emotional intelligence competency bank."""
-    return get_emotional_intelligence_bank()
+    return await run_sync(get_emotional_intelligence_bank)
 
 
 @router.get("/knowledge-pack/emotional-intelligence-15")
-def get_eq_15_catalog():
+async def get_eq_15_catalog():
     """Retrieve the 15-item emotional self-assessment bank (emotional skills)."""
-    return get_emotional_intelligence_15_bank()
+    return await run_sync(get_emotional_intelligence_15_bank)
 
 
 @router.get("/knowledge-pack/emotional-intelligence-25")
-def get_eq_25_catalog():
+async def get_eq_25_catalog():
     """Retrieve the 25-item emotional intelligence competency bank (historical)."""
-    return get_emotional_intelligence_25_bank()
+    return await run_sync(get_emotional_intelligence_25_bank)
 
 
 @router.get("/knowledge-pack/emotions")
-def get_emotions_catalog():
+async def get_emotions_catalog():
     """Retrieve the 9 discrete emotion indicator profiles with triggers and coping strategies."""
-    return get_emotion_indicators_bank()
+    return await run_sync(get_emotion_indicators_bank)
